@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>구함99 시그널 | 비트코인 선물 실시간 신호 + 검증된 적중률 공개</title>
+<meta name="description" content="비트코인·이더리움 선물 트레이더를 위한 실시간 고래·청산·펀딩비 시그널. 신호 적중률을 매일 정직하게 공개하는 한국어 텔레그램 채널.">
+<meta name="keywords" content="비트코인 시그널, 비트코인 선물, 코인 시그널, 고래 추적, 청산 알림, 펀딩비, 미결제약정, BTC 선물, 이더리움 선물, 텔레그램 코인방, 코인 정보방, 비트코인 실시간, 적중률, 선물 타점">
+<meta name="author" content="구함99">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="구함99 시그널 | 비트코인 선물 실시간 신호">
+<meta property="og:description" content="고래·청산·펀딩비를 실시간 분석. 신호 적중률을 매일 공개합니다.">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="구함99 시그널 | 비트코인 선물 실시간 신호">
+<meta name="twitter:description" content="고래·청산·펀딩비를 실시간 분석. 신호 적중률을 매일 공개합니다.">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-card: #131829;
+    --border: #1f2638;
+    --text: #e6e9f2;
+    --text-dim: #8893a8;
+    --accent: #f0b90b;
+    --accent-2: #00d4aa;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .container { max-width: 880px; margin: 0 auto; padding: 0 22px; }
+  .hero { padding: 84px 0 64px; text-align: center; }
+  .badge {
+    display: inline-block; padding: 6px 14px;
+    background: rgba(240,185,11,.12); border: 1px solid rgba(240,185,11,.3);
+    color: var(--accent); border-radius: 20px; font-size: 13px; font-weight: 600;
+    margin-bottom: 26px; letter-spacing: .2px;
+  }
+  h1 {
+    font-size: 44px; font-weight: 800; margin: 0 0 22px;
+    background: linear-gradient(135deg, #ffffff 0%, #c5cee0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.22; letter-spacing: -.5px;
+  }
+  .lead { font-size: 18px; color: var(--text-dim); margin: 0 0 38px; }
+  .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border-radius: 10px; text-decoration: none;
+    font-weight: 700; font-size: 16px;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .btn-primary { background: var(--accent); color: #0a0e1a; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(240,185,11,.32); }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg-card); }
+  section { padding: 56px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 28px; margin: 0 0 10px; letter-spacing: -.3px; }
+  .section-sub { color: var(--text-dim); margin: 0 0 32px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px;
+  }
+  .card-emoji { font-size: 28px; margin-bottom: 8px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--text-dim); font-size: 14.5px; }
+  .highlight {
+    background: linear-gradient(135deg, rgba(0,212,170,.08), rgba(240,185,11,.05));
+    border: 1px solid rgba(0,212,170,.25);
+    border-radius: 16px; padding: 32px 30px;
+  }
+  .highlight h2 { color: var(--accent-2); }
+  .highlight p { margin: 10px 0 0; }
+  .preview {
+    background: #17223b; border-radius: 14px; padding: 20px 22px;
+    font-family: -apple-system, "SF Pro Text", "Noto Sans KR", sans-serif;
+    border: 1px solid var(--border); font-size: 14.5px;
+  }
+  .preview .head { color: #8b9cbe; font-size: 12px; margin-bottom: 8px; }
+  .preview pre { margin: 0; white-space: pre-wrap; word-break: keep-all; color: #e6e9f2; font-family: inherit; }
+  .link-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
+  .link-row a {
+    color: var(--accent); text-decoration: none; font-weight: 600;
+    border-bottom: 1px solid transparent; padding-bottom: 1px;
+  }
+  .link-row a:hover { border-bottom-color: var(--accent); }
+  .card a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
+  footer {
+    padding: 44px 0 60px; text-align: center; color: var(--text-dim); font-size: 13px;
+    border-top: 1px solid var(--border); margin-top: 30px;
+  }
+  footer p { margin: 6px 0; }
+  .disclaimer { max-width: 620px; margin: 14px auto 0; line-height: 1.6; }
+  @media (max-width: 600px) {
+    h1 { font-size: 32px; }
+    .grid { grid-template-columns: 1fr; }
+    .hero { padding: 56px 0 44px; }
+    section { padding: 44px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="container hero">
+  <div class="badge">🐳 실시간 비트코인 선물 시그널</div>
+  <h1>고래·청산·펀딩비를<br>실시간으로, 그리고 정직하게</h1>
+  <p class="lead">
+    비트코인·이더리움 선물 트레이더를 위한 큐레이션된 실시간 신호.<br>
+    그리고 매일 채널에 공개되는 신호 적중률.
+  </p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://t.me/guham99_coin">📢 메인 채널 입장</a>
+    <a class="btn btn-ghost" href="https://t.me/guham99_signal">⚡ 실시간 시그널방</a>
+  </div>
+</header>
+
+<section class="container" id="features">
+  <h2>무엇을 받게 되나요</h2>
+  <p class="section-sub">잡코인 알림, 소액 청산, 의미 없는 OTC 이동은 자동으로 걸러집니다.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-emoji">🐳</div>
+      <h3>거래소 유입 추적 (강 등급)</h3>
+      <p>5천만 달러 이상 초대형 BTC·ETH 입금만 알림. 어중간한 노이즈는 사전 필터로 차단합니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-emoji">🔥</div>
+      <h3>실시간 청산·연쇄 청산</h3>
+      <p>50만 달러 이상 BTC/ETH 청산. 짧은 시간에 청산이 몰리면 '연쇄 청산 경고'로 별도 강조합니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-emoji">🌡️</div>
+      <h3>시장 온도계 (펀딩비 + OI)</h3>
+      <p>BTC·ETH 펀딩비와 미결제약정 변화를 2시간마다 정리. 시장이 롱 과열인지 숏 과열인지 한눈에.</p>
+    </div>
+    <div class="card">
+      <div class="card-emoji">⚡</div>
+      <h3>복합 신호 강조</h3>
+      <p>여러 신호가 짧은 시간에 같은 방향으로 겹치면 묶어서 표시. 흩어진 알림이 진짜 흐름이 됩니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="container" id="why">
+  <div class="highlight">
+    <h2>✅ 차별점: 적중률을 매일 공개합니다</h2>
+    <p>대부분의 시그널방은 자기가 틀린 건 숨깁니다. 구함99는 다릅니다 — 매일 신호 유형별 적중률 표를 채널에 그대로 올립니다.</p>
+    <p style="color: var(--text-dim); font-size: 14.5px;">
+      "거래소유입(강): 1h 78% (14/18) 평균 +0.42%" 같은 식으로요. 1시간·4시간 뒤 실제 가격을 바이낸스 데이터로 자동 대조한 결과입니다. 어떤 신호가 진짜 먹히는지 데이터로 직접 확인하세요.
+    </p>
+  </div>
+</section>
+
+<section class="container" id="preview">
+  <h2>샘플 신호</h2>
+  <p class="section-sub">채널에 실제로 올라오는 모양입니다.</p>
+  <div class="preview">
+    <div class="head">@guham99_signal · 실시간</div>
+<pre>🚨 65,631 ETH (2,005억)가 익명 지갑에서 Coinbase로 이체되었습니다.
+🚨 거래소 유입 (강): 강한 매도 압력 (하방 변동성 큼)
+⚡ 복합 신호: 최근 30분간 하방 신호 3건 중첩 (방향성 누적 - 하락 압력 우세)</pre>
+  </div>
+  <div style="height: 14px;"></div>
+  <div class="preview">
+    <div class="head">@guham99_signal · 실시간</div>
+<pre>BTCUSDT 바이낸스
+대규모 숏 청산 🟢
+매수 신호 9.41M달러(=141억) 체결가 77,128.11달러(=1.16억) 📈
+🔥 연쇄 청산 경고: 최근 5분간 BTC/ETH 청산 11건 폭증 (숏 연쇄 청산 - 숏 스퀴즈 급등 변동성)</pre>
+  </div>
+</section>
+
+<section class="container" id="channels">
+  <h2>채널 안내</h2>
+  <p class="section-sub">목적에 맞는 채널로 들어오세요.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-emoji">📢</div>
+      <h3>@guham99_coin (메인)</h3>
+      <p>거시·뉴스 중심. Glassnode·CryptoQuant·Coin Bureau·Tree News를 한국어로 요약·정리합니다.</p>
+      <p style="margin-top:12px;"><a href="https://t.me/guham99_coin">→ 입장하기</a></p>
+    </div>
+    <div class="card">
+      <div class="card-emoji">⚡</div>
+      <h3>@guham99_signal (시그널)</h3>
+      <p>실시간 고래·청산·펀딩비 시그널. 적중률 리포트가 매일 채널에 그대로 올라옵니다.</p>
+      <p style="margin-top:12px;"><a href="https://t.me/guham99_signal">→ 입장하기</a></p>
+    </div>
+  </div>
+  <div class="link-row">
+    <a href="https://x.com/99Bronnal">🐦 트위터 @99Bronnal</a>
+    <a href="https://99bronnal.blogspot.com">📝 블로그 99bronnal</a>
+  </div>
+</section>
+
+<footer>
+  <p>구함99 시그널 — 비트코인·이더리움 선물 트레이더를 위한 한국어 실시간 신호</p>
+  <p class="disclaimer">
+    ⚠️ 이 페이지에서 제공되는 모든 정보는 시장 분석·교육 목적의 참고 자료입니다. 투자 조언이 아니며, 매매 결정과 그에 따른 손익에 대한 책임은 본인에게 있습니다. 레버리지 거래는 원금 손실 위험이 큽니다.
+  </p>
+</footer>
+
+</body>
+</html>
