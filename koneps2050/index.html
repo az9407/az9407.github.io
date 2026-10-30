@@ -1231,7 +1231,7 @@ const Snd = (() => {
     runner: { bpm: 152, prog: prog('Am F C G Am F G E'), lead: 'flute', acc: 'strum', bass: 'drive', drums: 2, pad: .014,
       mel: mel(`0:A4:2 2:C5:2 4:E5:4 8:D5:2 10:C5:2 12:B4:2 14:C5:2 16:A4:4 20:F5:4 24:E5:2 26:D5:2 28:C5:4 32:G4:2 34:C5:2 36:E5:4 40:G5:4 44:E5:4 48:D5:6 54:E5:2 56:B4:8
         64:A4:2 66:C5:2 68:E5:4 72:A5:4 76:G5:2 78:E5:2 80:F5:4 84:E5:2 86:D5:2 88:C5:4 92:A4:4 96:B4:2 98:D5:2 100:G5:4 104:F5:2 106:E5:2 108:D5:4 112:E5:4 116:G#5:4 120:B5:8`) },
-    fever: { bpm: 168, prog: prog('C G Am F'), lead: 'chip', acc: 'strum', bass: 'drive', drums: 3, pad: .012,
+    fever: { bpm: 152, prog: prog('C G Am F'), lead: 'brass', acc: 'strum', bass: 'drive', drums: 2, pad: .012,
       mel: mel(`0:E5:2 2:G5:2 4:C6:2 6:G5:2 8:E6:4 12:D6:4 16:B5:2 18:D6:2 20:G5:2 22:B5:2 24:D6:8 32:C6:2 34:A5:2 36:E5:2 38:A5:2 40:C6:4 44:E6:4 48:F6:4 52:E6:2 54:D6:2 56:C6:8`) },
     warm: { bpm: 80, prog: prog('C G Am Em F C Dm G'), lead: 'flute', acc: 'harp', bass: 'root', drums: 0, pad: .02,
       mel: mel(`0:E5:6 6:D5:2 8:C5:8 16:D5:4 20:B4:4 24:G4:8 32:C5:4 36:E5:4 40:A5:6 46:G5:2 48:G5:8 56:E5:8
@@ -1297,8 +1297,7 @@ const Snd = (() => {
   }
   function kick(t, v = .32) { tone({ f: 120, f2: 42, t: .18, type: 'sine', v, bus: bgmBus, at: t }); }
   function snare(t, v = .07) { noise({ t: .14, v, ft: 'bandpass', ff: 1900, q: .7, bus: bgmBus, at: t }); tone({ f: 220, f2: 160, t: .07, type: 'triangle', v: v * .6, bus: bgmBus, at: t }); }
-  function hat(t, v = .025) { noise({ t: .035, v, ft: 'highpass', ff: 8000, bus: bgmBus, at: t }); }
-  function shaker(t, v = .018) { noise({ t: .06, v, ft: 'bandpass', ff: 6000, q: 1.5, bus: bgmBus, at: t }); }
+  function shaker(t, v = .014) { noise({ t: .09, v, a: .012, ft: 'bandpass', ff: 4200, q: .8, bus: bgmBus, at: t }); }
   const ARP = [0, 1, 2, 3, 2, 1, 2, 3];
   function playStep(s, t) {
     const M = SONGS[st.mood]; if (!M) return;
@@ -1317,8 +1316,8 @@ const Snd = (() => {
     if (M.bass === 'drive' && i % 2 === 0) bassNote(i % 4 === 2 ? r + 12 : r, t, sp * 1.6, .12);
     if (M.bass === 'bounce') { const pat = { 0: r, 6: C.fifth - 12, 8: r + 12, 12: C.fifth - 12, 14: C.third - 12 }; if (pat[i] != null) bassNote(pat[i], t, sp * 1.8, .13); }
     // 타악기
-    if (M.drums >= 1) { if (i === 0 || i === 8) kick(t, M.drums === 1 ? .2 : .3); if (i % 2 === 0) shaker(t, M.drums === 1 ? .014 : .02); }
-    if (M.drums >= 2) { if (i === 4 || i === 12) snare(t); if (i === 10 && M.drums >= 3) kick(t, .22); if (i % 2 === 1) hat(t, .012); }
+    if (M.drums >= 1) { if (i === 0 || i === 8) kick(t, M.drums === 1 ? .2 : .28); if (i % 4 === 2) shaker(t, M.drums === 1 ? .011 : .014); }
+    if (M.drums >= 2) { if (i === 4 || i === 12) snare(t, .06); if (i === 10 && M.drums >= 3) kick(t, .2); }
     if (M.drums >= 3 && (i === 6 || i === 14)) kick(t, .18);
     // 멜로디
     if (!M.by) { M.by = {}; for (const n of M.mel) (M.by[n[0]] = M.by[n[0]] || []).push(n); }
@@ -1345,7 +1344,7 @@ const Snd = (() => {
     const s0 = Math.ceil(pos);
     st.step = ((s0 % L) + L) % L; st.next = ctx.currentTime + lead + (s0 - pos) * sp;
     st.t0 = st.next - s0 * sp;
-    if (settings.bgm) { bgmBus.gain.cancelScheduledValues(ctx.currentTime); bgmBus.gain.setValueAtTime(.5, ctx.currentTime); }
+    if (settings.bgm) { const g = bgmBus.gain, t = ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.5, t + .06); }
     startSched();
     return st.t0;
   }
@@ -1353,17 +1352,18 @@ const Snd = (() => {
     if (st.mood === mood) return;
     st.mood = mood;
     if (!ctx) return;
-    st.step = 0; st.next = ctx.currentTime + .08;
-    if (settings.bgm) { bgmBus.gain.cancelScheduledValues(ctx.currentTime); bgmBus.gain.setValueAtTime(.12, ctx.currentTime); bgmBus.gain.linearRampToValueAtTime(.5, ctx.currentTime + .8); }
+    const t = ctx.currentTime;
+    st.step = 0; st.next = t + .1;
+    if (settings.bgm) { const g = bgmBus.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.12, t + .08); g.linearRampToValueAtTime(.5, t + .9); }
     startSched();
   }
   function setBgm(on) {
     settings.bgm = on; saveSettings();
-    if (ctx) { bgmBus.gain.cancelScheduledValues(ctx.currentTime); bgmBus.gain.linearRampToValueAtTime(on ? .5 : 0, ctx.currentTime + .25); }
+    if (ctx) { const g = bgmBus.gain, t = ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .5 : 0, t + .25); }
   }
   function setSfx(on) {
     settings.sfx = on; saveSettings();
-    if (ctx) sfxBus.gain.setValueAtTime(on ? .85 : 0, ctx.currentTime);
+    if (ctx) { const g = sfxBus.gain, t = ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .85 : 0, t + .05); }
   }
   function wind(on) {
     if (!ctx) return;
@@ -2396,7 +2396,7 @@ const GHud = {
 const Tutor = {
   on: false, steps: [], i: 0, t: 0, done: null, hold: 0,
   run(steps, done) {
-    this.on = true; this.steps = steps; this.i = -1; this.done = done;
+    this.on = true; this.steps = steps; this.i = -1; this.done = done; this.total = 0;
     $('#tutor').classList.add('on'); $('#tutorSkip').hidden = !!G.demo;
     this.next();
   },
@@ -2416,9 +2416,11 @@ const Tutor = {
   },
   update(dt) {
     if (!this.on) return;
-    this.t += dt;
+    this.t += dt; this.total += dt;
+    /* 튜토리얼은 모두 합쳐 10초. 다시 보려면 일시정지 메뉴의 하는 법 다시 보기 */
+    if (this.total > 10) { this.finish(); return; }
     const s = this.steps[this.i]; if (!s) return;
-    if (s.check && !s.button && this.t > (s.max || 15)) { this.next(); return; }
+    if (s.check && !s.button && this.t > (s.max || 4.5)) { this.next(); return; }
     if (s.check && s.check()) {
       this.hold += dt;
       if (this.hold > (s.wait != null ? s.wait : .35)) { if (!s.quiet) { Snd.sfx('good'); FX.stars(W / 2, 260, 6); } this.next(); }
@@ -3177,8 +3179,8 @@ Scenes.beat = {
     this.startSong(0, .3);
     BT.genBar = 1;
     Tutor.run([
-      { text: '서류가 <b>노란 동그라미</b>에 닿을 때 화면을 <b>톡</b> 눌러 도장을 찍어요', who: 'narumi', ex: 'smile', top: true, hand: () => { const n = BT.notes.find(n => n.state === 'wait'); if (!n) return null; const d = (n.step - this.songPos()) * BT.sp; return d < .9 ? { mode: 'tap', x: BX0, y: BY } : null; }, check: () => BT.hits >= 3, wait: .2, max: 10 },
-      { text: '빨간 <b>반칙 서류</b>는 찍지 말고 그냥 보내요', who: 'narumi', ex: 'serious', top: true, enter: () => { BT.tut = 2; }, check: () => BT.passes >= 2 && BT.hits >= 5, wait: .2, max: 10 },
+      { text: '서류가 <b>노란 동그라미</b>에 닿을 때 화면을 <b>톡</b> 눌러 도장을 찍어요', who: 'narumi', ex: 'smile', top: true, hand: () => { const n = BT.notes.find(n => n.state === 'wait'); if (!n) return null; const d = (n.step - this.songPos()) * BT.sp; return d < .9 ? { mode: 'tap', x: BX0, y: BY } : null; }, check: () => BT.hits >= 3, wait: .2 },
+      { text: '빨간 <b>반칙 서류</b>는 찍지 말고 그냥 보내요', who: 'narumi', ex: 'serious', top: true, enter: () => { BT.tut = 2; }, check: () => BT.passes >= 2 && BT.hits >= 5, wait: .2 },
       { text: BT.story ? '음악에 맞춰 결재해요. 중간에 <b>돌발 퀴즈</b>를 맞히면 피버 타임!' : '놓치거나 반칙 서류를 찍으면 <b>신뢰</b>가 줄어요. 끝까지 버텨 봐요!', who: 'dali', ex: 'proud', top: true, button: '시작하기' }
     ], () => {
       BT.tut = 0; BT.notes = []; BT.hits = 0; BT.perfect = 0; BT.misses = 0; BT.redHits = 0; BT.passes = 0; BT.combo = 0; BT.maxCombo = 0; BT.score = 0;
