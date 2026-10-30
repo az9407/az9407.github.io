@@ -522,6 +522,41 @@ input.wrong{border-color:#ff3d64!important;animation:shakeX .4s}
   #print img{width:100%}
 }
 
+/* 큰 글씨: 핵심 글자는 보통의 1.6~2배, 자잘한 설명은 숨김 */
+#stage.big .dbox{width:1720px}
+#stage.big .dtext{font-size:68px;line-height:1.32}
+#stage.big .dbox.sys .dtext{font-size:62px}
+#stage.big .tutor-box:not(.side-r):not(.side-l){width:1680px}
+#stage.big .tt-main p{font-size:64px;line-height:1.25}
+#stage.big .tutor-box.side-r .tt-main p,#stage.big .tutor-box.side-l .tt-main p{font-size:46px}
+#stage.big .tt-main p small{display:none}
+#stage.big #buddy{max-width:1300px}
+#stage.big #buddy p{font-size:52px}
+#stage.big .ox-card{width:1500px}
+#stage.big .ox-q{font-size:72px;line-height:1.3}
+#stage.big .ox-tag{font-size:46px}
+#stage.big .ox-reward{font-size:40px}
+#stage.big .ox{height:150px;font-size:58px}
+#stage.big .ox svg{width:72px;height:72px}
+#stage.big .ox-res{font-size:44px}
+#stage.big .ox-res b{font-size:56px}
+#stage.big .gh-score b{font-size:86px}
+#stage.big .gh-name{font-size:40px}
+#stage.big .gh-lv{font-size:34px}
+#stage.big .gh-lv b{font-size:46px}
+#stage.big .gh-goal span,#stage.big .gh-goal b{font-size:38px}
+#stage.big .btn.huge{font-size:68px}
+#stage.big .btn.huge small,#stage.big .t-foot,#stage.big .t-kicker{display:none}
+#stage.big .rbtn span{font-size:26px}
+#stage.big .ar-card p,#stage.big .ar-card .ac-best span,#stage.big .ar-card .ac-new{display:none}
+#stage.big .ar-card h3{font-size:40px!important;line-height:1.2;word-break:keep-all}
+#stage.big .ar-head p{display:none}
+#stage.big .ar-card .ac-play{height:100px;font-size:42px}
+#stage.big .mnode .mn-name{font-size:40px}
+#stage.big .mnode .mn-name small,#stage.big .map-journey{display:none}
+#stage.big .rs-rows li{font-size:40px;padding:14px 28px}
+#stage.big .rs-fact{display:none}
+
 </style>
 </head>
 <body>
@@ -874,6 +909,8 @@ const settings = Object.assign({
   difficulty: 'normal', bigText: (() => { try { return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 620; } catch (e) { return false; } })(), shake: !reduceMotion, kiosk: false, bgm: true, sfx: true
 }, store.get('settings', {}));
 function saveSettings() { store.set('settings', settings); }
+/* 큰 글씨 모드: 게임 속 글씨를 크게, 자잘한 설명은 숨김 */
+const BIGT = () => !!settings.bigText;
 if (!['easy', 'normal', 'hard'].includes(settings.difficulty)) settings.difficulty = 'normal';
 /* 스토리 모드 속도 배율. 무한 모드는 레벨에 따라 스스로 어려워짐 */
 const DIFF = { easy: { label: '쉬움', k: .8 }, normal: { label: '보통', k: 1 }, hard: { label: '어려움', k: 1.2 } };
@@ -1009,7 +1046,7 @@ const FX = {
     for (let i = 0; i < n; i++) this.ps.push({ x: rand(0, W), y: rand(-200, -20), vx: rand(-80, 80), vy: rand(150, 420), life: rand(2.2, 3.6), max: 3.6, color: pick(cols), size: rand(8, 14), g: 60, rect: true, rot: rand(0, 6), vr: rand(-8, 8) });
   },
   ring(x, y, color, r0 = 10, r1 = 140, life = .5, w = 8) { this.rings.push({ x, y, color, r0, r1, life, max: life, w }); },
-  text(x, y, str, color = '#fff', size = 40, life = 1) { this.texts.push({ x, y, str, color, size: size * (settings.bigText ? 1.15 : 1), life, max: life }); },
+  text(x, y, str, color = '#fff', size = 40, life = 1) { this.texts.push({ x, y, str, color, size: size * (settings.bigText ? 1.5 : 1), life, max: life }); },
   update(dt) {
     for (const p of this.ps) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= .985; if (p.rot != null) p.rot += p.vr * dt; }
     this.ps = this.ps.filter(p => p.life > 0);
@@ -2220,7 +2257,7 @@ function panel(ctx, x, y, w, h) {
   rr(ctx, x, y, w, h, 30); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.restore();
 }
 function label(ctx, txt, x, y, size, fg, bg) {
-  if (settings.bigText) size *= 1.22;
+  if (settings.bigText) size *= 1.7;
   ctx.save(); ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round'; ctx.lineWidth = size * .3; ctx.strokeStyle = bg; ctx.strokeText(txt, x, y); ctx.fillStyle = fg; ctx.fillText(txt, x, y); ctx.restore();
 }
@@ -2929,7 +2966,7 @@ Scenes.cut = {
           ctx.strokeStyle = '#3ba4ff'; ctx.lineWidth = 9; ctx.setLineDash([22, 12]); ctx.stroke(); ctx.setLineDash([]);
         }
         ctx.restore();
-        if (!ghost) label(ctx, e.thick && e.hp > 1 ? '카르텔 ×2' : e.label, (A.x + B.x) / 2, (A.y + B.y) / 2 - 26, 24, '#fff', red ? (e.thick ? '#8a0c26' : '#d61f45') : '#1f74c9');
+        if (!ghost && (!BIGT() || (e.thick && e.hp > 1))) label(ctx, e.thick && e.hp > 1 ? '카르텔 ×2' : e.label, (A.x + B.x) / 2, (A.y + B.y) / 2 - 26, 24, '#fff', red ? (e.thick ? '#8a0c26' : '#d61f45') : '#1f74c9');
       }
       // 업체
       for (const [i, n] of g.nodes.entries()) {
@@ -2939,7 +2976,7 @@ Scenes.cut = {
         ctx.save(); if (n.paper) ctx.globalAlpha *= this.vis(n) ? .55 : .15;
         drawCompany(ctx, n.x, y, 46, n.paper ? '#c9d6ea' : n.color, mood, sly ? 1 + Math.sin(t * 10 + n.ph) * .03 : 1);
         ctx.restore();
-        label(ctx, n.name, n.x, y + 66, 22, n.paper ? '#8a9bb3' : '#1f2b4d', '#fff');
+        if (!BIGT()) label(ctx, n.name, n.x, y + 66, 22, n.paper ? '#8a9bb3' : '#1f2b4d', '#fff');
       }
       ctx.restore();
     }
@@ -3169,7 +3206,8 @@ Scenes.price = {
     ctx.restore();
   },
   drawSide(ctx, t) {
-    // 왼쪽: 종합심사 설명
+    // 왼쪽: 종합심사 설명 (큰 글씨 모드에서는 숨김)
+    if (!BIGT()) {
     panel(ctx, 40, 150, 440, 520);
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1f2b4d'; ctx.font = `900 32px ${FONT}`; ctx.fillText('나라는 이렇게 골라요', 72, 204);
     const rows = [['i-coin', '가격', '너무 싸도 비싸도 안 돼요'], ['i-shield', '수행 능력', '끝까지 잘 만들 수 있나'], ['i-users', '사회적 책임', '일자리·안전도 함께 봐요']];
@@ -3182,6 +3220,7 @@ Scenes.price = {
       ctx.fillStyle = '#5a6b8c'; ctx.font = `750 21px ${FONT}`; ctx.fillText(b, 150, y + 20);
     });
     ctx.fillStyle = '#5a6b8c'; ctx.font = `750 20px ${FONT}`; wrapText(ctx, '조달청 종합심사낙찰제는 가격, 공사수행능력, 사회적 책임을 함께 심사해요.', 72, 620, 380, 26, 2);
+    }
     // 오른쪽: 공공건물 쌓기
     panel(ctx, 1500, 150, 380, 860);
     ctx.fillStyle = '#1f2b4d'; ctx.font = `900 30px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('낙찰로 짓는 공공건물', 1690, 200);
@@ -3505,9 +3544,11 @@ Scenes.beat = {
     rr(ctx, 1180, 150, 600, 300, 30); ctx.fillStyle = '#bfe6ff'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 14; ctx.stroke();
     drawCloud(ctx, 1380 + Math.sin(t * .2) * 40, 270, 120, .9); drawCloud(ctx, 1620, 330, 90, .8);
     ctx.fillStyle = '#fff'; ctx.fillRect(1474, 150, 12, 300);
-    rr(ctx, 1180, 820, 600, 150, 30); ctx.fillStyle = '#1f2b4d'; ctx.fill();
-    ctx.fillStyle = '#3ddc84'; ctx.font = `900 36px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('나라장터 전자결재', 1220, 872);
-    ctx.fillStyle = '#9fe8ff'; ctx.font = `800 26px ${FONT}`; ctx.fillText('공고 · 입찰 · 계약 · 대금 지급까지 온라인', 1220, 922);
+    if (!BIGT()) {
+      rr(ctx, 1180, 820, 600, 150, 30); ctx.fillStyle = '#1f2b4d'; ctx.fill();
+      ctx.fillStyle = '#3ddc84'; ctx.font = `900 36px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('나라장터 전자결재', 1220, 872);
+      ctx.fillStyle = '#9fe8ff'; ctx.font = `800 26px ${FONT}`; ctx.fillText('공고 · 입찰 · 계약 · 대금 지급까지 온라인', 1220, 922);
+    }
     const cur = BT.segs[BT.playing];
     if (cur && BEAT_NAME[cur.mood]) { ctx.save(); ctx.globalAlpha = BT.songT > 0 ? 1 : .75; label(ctx, `♪ ${BEAT_NAME[cur.mood]}`, 1480, 500, BT.songT > 0 ? 44 : 32, '#1f2b4d', '#fff'); ctx.restore(); }
     for (let i = 0; i < Math.min(14, BT.hits); i++) { ctx.save(); ctx.translate(760 + (i % 2) * 6, 930 - i * 9); ctx.rotate((hash(i) - .5) * .12); rr(ctx, -80, -12, 160, 22, 6); ctx.fillStyle = i % 3 ? '#fff' : '#eaf4ff'; ctx.fill(); ctx.strokeStyle = '#3ba4ff'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); }
@@ -3869,7 +3910,7 @@ Scenes.drone = {
     // 피버 게이지
     rr(ctx, W / 2 - 260, H - 54, 520, 24, 12); ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fill();
     rr(ctx, W / 2 - 256, H - 50, 512 * (DR.fever > 0 ? DR.fever / 6 : (DR.streak % 6) / 6), 16, 8); ctx.fillStyle = DR.fever > 0 ? `hsl(${(t * 200) % 360},90%,60%)` : '#ff9f43'; ctx.fill();
-    label(ctx, DR.fever > 0 ? '피버 타임' : '연속 배송 6번이면 피버', W / 2, H - 76, 22, '#1f2b4d', '#fff');
+    if (!BIGT() || DR.fever > 0) label(ctx, DR.fever > 0 ? '피버 타임' : '연속 배송 6번이면 피버', W / 2, H - 76, 22, '#1f2b4d', '#fff');
   }
 };
 function drawStar5(ctx, x, y, r, col) { ctx.save(); ctx.fillStyle = col; ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr2 = i % 2 ? r * .45 : r; ctx.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } ctx.closePath(); ctx.fill(); ctx.restore(); }
@@ -3883,11 +3924,11 @@ function drawStar5(ctx, x, y, r, col) { ctx.save(); ctx.fillStyle = col; ctx.beg
 const JD = {};
 const JCX = 960, JCY = 600, JW = 600, JH = 720;
 const JD_RULES = [
-  { lv: 1, key: 'ban', text: '빨간 "입찰 참가 제한" 도장', why: '입찰 참가 제한을 받은 업체예요' },
-  { lv: 3, key: 'late', text: '마감보다 늦게 낸 서류' },
-  { lv: 6, key: 'seal', text: '찌그러진 가짜 인증 도장', why: '찌그러진 가짜 인증 도장이에요' },
-  { lv: 10, key: 'direct', text: '중소기업 경쟁제품인데 직접생산 확인서 없음', why: '중소기업 경쟁제품인데 직접생산 확인서가 없어요' },
-  { lv: 20, key: 'twin', text: '앞 서류와 대표가 같음, 들러리 의심', why: '앞 업체와 대표가 같아요. 들러리 의심!' }
+  { lv: 1, key: 'ban', short: '참가 제한 도장', text: '빨간 "입찰 참가 제한" 도장', why: '입찰 참가 제한을 받은 업체예요' },
+  { lv: 3, key: 'late', short: '늦은 제출', text: '마감보다 늦게 낸 서류' },
+  { lv: 6, key: 'seal', short: '가짜 인증 도장', text: '찌그러진 가짜 인증 도장', why: '찌그러진 가짜 인증 도장이에요' },
+  { lv: 10, key: 'direct', short: '직접생산 확인서 없음', text: '중소기업 경쟁제품인데 직접생산 확인서 없음', why: '중소기업 경쟁제품인데 직접생산 확인서가 없어요' },
+  { lv: 20, key: 'twin', short: '앞 서류와 같은 대표', text: '앞 서류와 대표가 같음, 들러리 의심', why: '앞 업체와 대표가 같아요. 들러리 의심!' }
 ];
 const JD_NEW = {
   3: ['narumi', '새 규칙! 마감 시간보다 늦게 낸 서류는 탈락이에요'],
@@ -4091,7 +4132,7 @@ Scenes.judge = {
     row(-JH / 2 + 305, 110);
     ctx.save(); ctx.translate(-JW / 2 + 100, -JH / 2 + 360); ctx.strokeStyle = '#1f2b4d'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 34, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -20); ctx.moveTo(0, 0); ctx.lineTo(14, 8); ctx.stroke(); ctx.restore();
     ctx.fillStyle = '#5a6b8c'; ctx.font = `800 24px ${FONT}`; ctx.fillText(`마감 ${jdTime(c.dl)}`, -JW / 2 + 170, -JH / 2 + 336);
-    ctx.fillStyle = '#1f2b4d'; ctx.font = `950 44px ${FONT}`; ctx.fillText(`제출 ${jdTime(c.sub)}`, -JW / 2 + 170, -JH / 2 + 380);
+    ctx.fillStyle = c.sub > c.dl ? '#e8283f' : '#1f2b4d'; ctx.font = `950 44px ${FONT}`; ctx.fillText(`제출 ${jdTime(c.sub)}`, -JW / 2 + 170, -JH / 2 + 380);
     // 인증 도장
     row(-JH / 2 + 430, 110);
     this.seal(ctx, L >= 6 || JD.tut ? c.seal : 'real', -JW / 2 + 100, -JH / 2 + 485);
@@ -4128,7 +4169,7 @@ Scenes.judge = {
       const y = 250 + i * 108; const fresh = JD.level - r.lv < 2 && !JD.tut && r.lv > 1;
       rr(ctx, 70, y, 350, 92, 20); ctx.fillStyle = fresh ? '#fff1c2' : '#f6f3ff'; ctx.fill();
       ctx.fillStyle = '#e8283f'; ctx.font = `950 34px ${FONT}`; ctx.fillText('✕', 88, y + 46);
-      ctx.fillStyle = '#1f2b4d'; ctx.font = `850 24px ${FONT}`; wrapText(ctx, r.text, 130, y + 32, 280, 30, 2);
+      ctx.fillStyle = '#1f2b4d'; if (BIGT()) { ctx.font = `950 32px ${FONT}`; wrapText(ctx, r.short, 130, y + 30, 280, 36, 2); } else { ctx.font = `850 24px ${FONT}`; wrapText(ctx, r.text, 130, y + 32, 280, 30, 2); }
     });
     ctx.fillStyle = '#1fa85c'; ctx.font = `900 24px ${FONT}`; ctx.fillText('나머지는 오른쪽으로 통과', 80, 250 + R.length * 108 + 20);
     // 오른쪽: 앞 서류와 최근 심사
@@ -4136,8 +4177,8 @@ Scenes.judge = {
       panel(ctx, 1490, 130, 380, 200); ctx.fillStyle = '#5a6b8c'; ctx.font = `900 26px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText('앞 서류 대표', 1520, 172);
       if (JD.prev) { this.face(ctx, JD.prev.rep, 1570, 250, .9); ctx.fillStyle = '#1f2b4d'; ctx.font = `950 38px ${FONT}`; ctx.fillText(JD.prev.rep.name, 1640, 252); }
     }
-    panel(ctx, 1490, 360, 380, 330); ctx.fillStyle = '#5a6b8c'; ctx.font = `900 26px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText('최근 심사', 1520, 402);
-    JD.log.forEach((l, i) => { const y = 450 + i * 60; ctx.fillStyle = l.ok ? '#1fa85c' : '#e8283f'; ctx.font = `950 30px ${FONT}`; ctx.fillText(l.ok ? '○' : '✕', 1520, y); ctx.fillStyle = '#1f2b4d'; ctx.font = `850 26px ${FONT}`; ctx.fillText(`${l.name} ${l.pass ? '통과' : '탈락'}`, 1566, y); });
+    if (!BIGT()) panel(ctx, 1490, 360, 380, 330); if (!BIGT()) { ctx.fillStyle = '#5a6b8c'; ctx.font = `900 26px ${FONT}`; ctx.textAlign = 'left'; ctx.fillText('최근 심사', 1520, 402);
+    JD.log.forEach((l, i) => { const y = 450 + i * 60; ctx.fillStyle = l.ok ? '#1fa85c' : '#e8283f'; ctx.font = `950 30px ${FONT}`; ctx.fillText(l.ok ? '○' : '✕', 1520, y); ctx.fillStyle = '#1f2b4d'; ctx.font = `850 26px ${FONT}`; ctx.fillText(`${l.name} ${l.pass ? '통과' : '탈락'}`, 1566, y); }); }
     // 통과·탈락 자리
     const dx = JD.drag ? JD.drag.dx : 0;
     [[-1, '#ff5c7a', '탈락'], [1, '#3ddc84', '통과']].forEach(([s, col, txt]) => {
