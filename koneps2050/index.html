@@ -2418,6 +2418,7 @@ const Tutor = {
     if (!this.on) return;
     this.t += dt;
     const s = this.steps[this.i]; if (!s) return;
+    if (s.check && !s.button && this.t > (s.max || 15)) { this.next(); return; }
     if (s.check && s.check()) {
       this.hold += dt;
       if (this.hold > (s.wait != null ? s.wait : .35)) { if (!s.quiet) { Snd.sfx('good'); FX.stars(W / 2, 260, 6); } this.next(); }
@@ -2634,7 +2635,7 @@ Scenes.cut = {
   spawn(o = {}) {
     const slot = o.slot != null ? o.slot : this.freeSlot(); if (slot < 0) return null;
     const lv = CT.story ? 1 + Math.min(4, CT.cleared / 3) : CT.level;
-    const k = o.k || Math.min(6, 3 + Math.floor(Math.random() * (1 + lv * .7)));
+    const k = o.k || Math.min(6, 3 + Math.floor(Math.random() * (1 + lv * .35)));
     const [cx, cy] = CT_SLOTS[slot];
     const R = 100 + k * 10, a0 = rand(0, 6.28);
     const names = shuffle([...CT_NAMES]);
@@ -2642,11 +2643,11 @@ Scenes.cut = {
     const edges = [];
     for (let i = 0; i < k; i++) { if (k === 2 && i === 1) break; if (k === 3 || i < k - 1 || k >= 4) edges.push({ a: i, b: (i + 1) % k }); }
     if (k >= 5) edges.push({ a: 0, b: Math.floor(k / 2) });
-    const blueP = o.blue != null ? -1 : clamp(.12 + lv * .07, .12, .4);
+    const blueP = o.blue != null ? -1 : clamp(.12 + lv * .03, .12, .3);
     edges.forEach(e => { e.type = Math.random() < blueP ? 'blue' : 'red'; e.cut = false; e.label = e.type === 'red' ? pick(CT_RED) : '공동계약'; e.cutT = 0; e.ph = rand(0, 6); });
     if (o.types) edges.forEach((e, i) => { e.type = o.types[i] || 'red'; e.label = e.type === 'red' ? pick(CT_RED) : '공동계약'; });
     if (!edges.some(e => e.type === 'red')) { edges[0].type = 'red'; edges[0].label = pick(CT_RED); }
-    const life = o.life || (CT.story ? 9.5 / D().k : Math.max(4.2, 8.5 - CT.level * .45));
+    const life = o.life || (CT.story ? 9.5 / D().k : Math.max(5.5, 9 - CT.level * .25));
     const g = { slot, cx, cy, nodes, edges, life, max: life, state: 'live', fade: 0, t: 0 };
     CT.groups.push(g);
     Snd.sfx('whoosh');
@@ -2694,7 +2695,7 @@ Scenes.cut = {
     Snd.sfx('success'); FX.stars(g.cx, g.cy, 12); FX.ring(g.cx, g.cy, '#3ddc84', 40, 260, .5, 12);
     FX.text(g.cx, g.cy, '공정 경쟁!', '#3ddc84', 52, 1.1);
     if (CT.story) { this.goalHud(); if (CT.cleared >= CT.need) this.win(); }
-    else if (CT.cleared % 5 === 0) { CT.level++; Flow.level = CT.level; GHud.level(CT.level); Snd.sfx('levelup'); FX.text(W / 2, 300, `레벨 ${CT.level}! 더 빨라져요`, '#fff', 64, 1.2); }
+    else if (CT.cleared % 5 === 0) { CT.level++; Flow.level = CT.level; GHud.level(CT.level); Snd.sfx('levelup'); FX.text(W / 2, 300, `레벨 ${CT.level}! 더 빨라져요`, '#fff', 64, 1.2); if (CT.level % 5 === 0 && CT.hearts < 3) { CT.hearts++; GHud.hearts(CT.hearts, 3); Snd.sfx('pickup'); FX.text(W / 2, 400, '하트 하나 회복!', '#ff5c7a', 52, 1.2); } }
   },
   fail(g) {
     g.state = 'fail'; g.fade = 0; CT.fails++; CT.combo = 0;
@@ -2781,7 +2782,7 @@ Scenes.cut = {
     if (CT.fever > 0) { CT.fever -= dt; if (CT.fever <= 0) { GHud.fever(false); Snd.bgm('sky'); } }
     // 동시에 떠 있는 묶음 수
     const live = CT.groups.filter(g => g.state === 'live').length;
-    const target = CT.story ? (CT.cleared < 3 ? 1 : CT.cleared < 8 ? 2 : 3) : Math.min(4, 1 + Math.floor(CT.level / 2));
+    const target = CT.story ? (CT.cleared < 3 ? 1 : CT.cleared < 8 ? 2 : 3) : Math.min(3, 1 + Math.floor(CT.level / 3));
     CT.spawnT -= dt;
     if (live < target && CT.spawnT <= 0 && !(CT.story && CT.cleared + live >= CT.need + 1)) { this.spawn(); CT.spawnT = .7; }
     // 돌발 OX
@@ -2894,6 +2895,7 @@ Scenes.price = {
   nextItem(first) {
     PR.item = PR_ITEMS[PR.idx++ % PR_ITEMS.length];
     PR.c = rand(.32, .68); PR.u = 0; PR.dir = 1; PR.phase = 'run'; PR.result = null; PR.swings = 0;
+    if (!PR.story && !PR.tut) { PR.w = Math.max(.065, .13 - (PR.level - 1) * .006); PR.v = Math.min(.95, .42 + (PR.level - 1) * .045); }
     if (!first) Snd.sfx('whoosh');
   },
   zoneW() { return PR.w * (PR.lens > 0 ? 1.8 : 1) * (PR.fever > 0 ? 1.3 : 1); },
@@ -2918,10 +2920,9 @@ Scenes.price = {
       if (PR.lens > 0) PR.lens--;
       if (PR.streak >= 3 && PR.fever <= 0) this.feverOn();
       else if (PR.fever > 0) { PR.fever--; if (PR.fever <= 0) { GHud.fever(false); Snd.bgm('puzzle'); } }
-      PR.w = Math.max(PR.story ? .075 : .055, PR.w - (PR.story ? .004 : .006));
-      PR.v = Math.min(PR.story ? 1 : 1.05, PR.v + (PR.story ? .025 : .045));
+      if (PR.story) { PR.w = Math.max(.075, PR.w - .004); PR.v = Math.min(1, PR.v + .025); }
       if (PR.story) { this.goalHud(); if (PR.deals >= PR.need) this.win(); }
-      else if (PR.deals % 5 === 0) { PR.level++; Flow.level = PR.level; GHud.level(PR.level); Snd.sfx('levelup'); FX.text(W / 2, 345, `레벨 ${PR.level}! 바늘이 흔들려요`, '#fff', 50, 1.2); }
+      else if (PR.deals % 5 === 0) { PR.level++; Flow.level = PR.level; GHud.level(PR.level); Snd.sfx('levelup'); FX.text(W / 2, 345, `레벨 ${PR.level}! 바늘이 빨라져요`, '#fff', 50, 1.2); if (PR.level % 5 === 0 && PR.hearts < 3) { PR.hearts++; GHud.hearts(PR.hearts, 3); Snd.sfx('pickup'); FX.text(W / 2, 400, '하트 하나 회복!', '#ff5c7a', 52, 1.2); } }
     } else {
       PR.miss++; PR.streak = 0; PR.shake = .5;
       Snd.sfx('error'); shake(8);
@@ -2968,10 +2969,10 @@ Scenes.price = {
     if (!(fl === 'play' || PR.tut || fl === 'count' || fl === 'tutor')) { GHud.score(PR.score); return; }
     if (PR.phase === 'run' && (fl === 'play' || PR.tut || fl === 'tutor')) {
       let v = PR.v * (PR.fever > 0 ? .7 : 1);
-      if (!PR.story && PR.level >= 3) v *= 1 + .25 * Math.sin(BG.t * (1.5 + PR.level * .2));
+      if (!PR.story && PR.level >= 6) v *= 1 + .2 * Math.sin(BG.t * (1.5 + PR.level * .2));
       PR.u += PR.dir * v * dt;
       if (PR.u >= 1) { PR.u = 1; PR.dir = -1; PR.swings++; } if (PR.u <= 0) { PR.u = 0; PR.dir = 1; PR.swings++; }
-      if (fl === 'play' && !PR.tut && !PR.done && PR.swings >= (PR.story ? 6 : Math.max(3, 5 - Math.floor(PR.level / 2)))) this.timeout();
+      if (fl === 'play' && !PR.tut && !PR.done && PR.swings >= (PR.story ? 6 : Math.max(4, 6 - Math.floor(PR.level / 4)))) this.timeout();
       if ((G.demo || G.testBot) && fl === 'play') this.bot(dt);
     } else if (PR.phase === 'stop') {
       PR.rt += dt;
@@ -3119,9 +3120,9 @@ Scenes.beat = {
     if (BT.story && BT.oxBars.some(b => bar >= b && bar < b + 3)) return;
     if (!BT.story && !G.demo && bar > 2 && (sec === 9 || sec === 10 || sec === 0)) return;
     if (OX.on || bar <= BT.holdTo) return;
-    const lv = BT.story ? (bar < 7 ? 0 : bar < 14 ? 1 : 2) : Math.min(2, Math.floor((BT.level - 1) / 2));
+    const lv = BT.story ? (bar < 7 ? 0 : bar < 14 ? 1 : 2) : BT.level <= 3 ? 0 : BT.level <= 7 ? 1 : 2;
     const pat = pick(BT_PAT[lv]);
-    const redP = BT.story ? [.15, .22, .28][lv] : Math.min(.35, .14 + BT.level * .03);
+    const redP = BT.story ? [.15, .22, .28][lv] : Math.min(.3, .12 + BT.level * .015);
     pat.forEach(s => { const r = Math.random(); BT.notes.push({ step: bar * 16 + s, kind: r < redP ? 'red' : r < redP + .07 ? 'gold' : 'normal', state: 'wait', t: 0 }); });
   },
   tap() {
@@ -3130,13 +3131,13 @@ Scenes.beat = {
     BT.stampT = .14; Snd.sfx('thud');
     const pos = this.songPos(); let best = null, bd = 1e9;
     for (const n of BT.notes) { if (n.state !== 'wait') continue; const d = Math.abs(n.step - pos) * BT.sp; if (d < bd) { bd = d; best = n; } }
-    if (!best || bd > .19) { this.show('헛손질', '#9fb0c8'); return; }
+    if (!best || bd > (BT.tut ? .26 : .19)) { this.show('헛손질', '#9fb0c8'); return; }
     if (best.kind === 'red') {
       best.state = 'bad'; BT.redHits++; BT.combo = 0; this.setFever(false);
       Snd.sfx('error'); shake(10);
       this.show('반칙 서류를 찍었어요!', '#ff3d64');
       FX.burst(BX0, BY, ['#ff5c6c', '#fff'], 20, 360, 7);
-      if (!BT.story && !BT.tut) BT.trust -= 20;
+      if (!BT.story && !BT.tut) BT.trust -= 15;
       if (!BT.seenRed && !G.demo) { BT.seenRed = true; buddy('narumi', 'worried', '빨간 반칙 서류는 찍지 말고 그냥 보내요!', 2600); }
       return;
     }
@@ -3176,8 +3177,8 @@ Scenes.beat = {
     this.startSong(0, .3);
     BT.genBar = 1;
     Tutor.run([
-      { text: '서류가 <b>노란 동그라미</b>에 닿을 때 화면을 <b>톡</b> 눌러 도장을 찍어요', who: 'narumi', ex: 'smile', top: true, hand: () => { const n = BT.notes.find(n => n.state === 'wait'); if (!n) return null; const d = (n.step - this.songPos()) * BT.sp; return d < .9 ? { mode: 'tap', x: BX0, y: BY } : null; }, check: () => BT.hits >= 3, wait: .2 },
-      { text: '빨간 <b>반칙 서류</b>는 찍지 말고 그냥 보내요', who: 'narumi', ex: 'serious', top: true, enter: () => { BT.tut = 2; }, check: () => BT.passes >= 2 && BT.hits >= 5, wait: .2 },
+      { text: '서류가 <b>노란 동그라미</b>에 닿을 때 화면을 <b>톡</b> 눌러 도장을 찍어요', who: 'narumi', ex: 'smile', top: true, hand: () => { const n = BT.notes.find(n => n.state === 'wait'); if (!n) return null; const d = (n.step - this.songPos()) * BT.sp; return d < .9 ? { mode: 'tap', x: BX0, y: BY } : null; }, check: () => BT.hits >= 3, wait: .2, max: 10 },
+      { text: '빨간 <b>반칙 서류</b>는 찍지 말고 그냥 보내요', who: 'narumi', ex: 'serious', top: true, enter: () => { BT.tut = 2; }, check: () => BT.passes >= 2 && BT.hits >= 5, wait: .2, max: 10 },
       { text: BT.story ? '음악에 맞춰 결재해요. 중간에 <b>돌발 퀴즈</b>를 맞히면 피버 타임!' : '놓치거나 반칙 서류를 찍으면 <b>신뢰</b>가 줄어요. 끝까지 버텨 봐요!', who: 'dali', ex: 'proud', top: true, button: '시작하기' }
     ], () => {
       BT.tut = 0; BT.notes = []; BT.hits = 0; BT.perfect = 0; BT.misses = 0; BT.redHits = 0; BT.passes = 0; BT.combo = 0; BT.maxCombo = 0; BT.score = 0;
@@ -3204,9 +3205,9 @@ Scenes.beat = {
     // 놓친 서류
     for (const n of BT.notes) {
       n.t += dt;
-      if (n.state === 'wait' && (pos - n.step) * BT.sp > .19) {
+      if (n.state === 'wait' && (pos - n.step) * BT.sp > (BT.tut ? .26 : .19)) {
         if (n.kind === 'red') { n.state = 'pass'; BT.passes++; BT.score += 30; this.show('잘 걸러 냈어요', '#3ba4ff'); Snd.sfx('good'); }
-        else { n.state = 'miss'; BT.misses++; BT.combo = 0; this.setFever(false); this.show('놓쳤어요', '#ff8fa3'); if (!BT.story && !BT.tut) BT.trust -= 12; }
+        else { n.state = 'miss'; BT.misses++; BT.combo = 0; this.setFever(false); this.show('놓쳤어요', '#ff8fa3'); if (!BT.story && !BT.tut) BT.trust -= 8; }
       }
     }
     BT.notes = BT.notes.filter(n => (pos - n.step) * BT.sp < 2.5);
@@ -3215,7 +3216,7 @@ Scenes.beat = {
       const bar = Math.floor(pos / 16);
       if (BT.story && BT.oxBars.length && bar >= BT.oxBars[0]) { BT.oxBars.shift(); this.ox(); }
       if (!BT.story && !G.demo) {
-        const lv = 1 + Math.floor((bar + 2) / 11); if (lv !== BT.level) { BT.level = lv; Flow.level = lv; GHud.level(lv); Snd.sfx('levelup'); BT.travel = Math.max(1.2, 1.9 - (lv - 1) * .12); if (lv > 1) FX.text(W / 2, 300, `레벨 ${lv}! 서류가 더 빨라져요`, '#fff', 60, 1.3); }
+        const lv = 1 + Math.floor((bar + 2) / 11); if (lv !== BT.level) { BT.level = lv; Flow.level = lv; GHud.level(lv); Snd.sfx('levelup'); BT.travel = Math.max(1.35, 1.9 - (lv - 1) * .06); if (lv > 1) BT.trust = Math.min(100, BT.trust + 20); if (lv > 1) FX.text(W / 2, 300, `레벨 ${lv}! 서류가 더 빨라져요`, '#fff', 60, 1.3); }
         if (bar % 11 === 9 && BT.lastOx !== bar && bar > 2) { BT.lastOx = bar; this.ox(); }
         if (BT.trust <= 0) this.over();
       }
@@ -3305,11 +3306,11 @@ Scenes.drone = {
   start() { DR.t = 0; if (!DR.drones.length) this.spawn(); },
   goalHud() { GHud.goal(DR.gold ? '덧창 배송' : '비축물자 배송', Math.min(1, DR.delivered / DR.need), DR.gold ? '마지막!' : `${DR.delivered}/${DR.need}`); },
   freePad() { const used = new Set(DR.drones.filter(d => d.state === 'wait' || d.state === 'back' || (d.state === 'fly' && Math.hypot(d.x - d.sx, d.y - d.sy) < 120)).map(d => d.pad)); const f = [0, 1, 2].filter(i => !used.has(i)); return f.length ? pick(f) : -1; },
-  patience() { return DR.story ? 11 / D().k : Math.max(5, 10.5 - DR.level * .6); },
-  speed() { return DR.story ? 420 : Math.min(640, 400 + DR.level * 30); },
+  patience() { return DR.story ? 11 / D().k : Math.max(7, 12 - DR.level * .35); },
+  speed() { return DR.story ? 420 : Math.min(560, 420 + DR.level * 15); },
   spawn(o = {}) {
     const pad = o.pad != null ? o.pad : this.freePad(); if (pad < 0) return null;
-    const binP = DR.story ? (DR.delivered < 3 ? 0 : .16) : Math.min(.25, .1 + DR.level * .025);
+    const binP = DR.story ? (DR.delivered < 3 ? 0 : .16) : Math.min(.22, .1 + DR.level * .015);
     const kind = o.kind || (Math.random() < binP ? 'bin' : pick(DR_ORDER));
     const [x, y] = DR_PADS[pad];
     const life = o.life || this.patience();
@@ -3363,7 +3364,7 @@ Scenes.drone = {
       if (DR.streak > 0 && DR.streak % 6 === 0 && DR.fever <= 0) this.feverOn();
       if (d.gold) { this.win(); return; }
       if (DR.story) { this.goalHud(); if (DR.delivered >= DR.need && !DR.gold && !DR.tut) this.goldDrone(); }
-      else if (DR.delivered % 6 === 0) { DR.level++; Flow.level = DR.level; GHud.level(DR.level); Snd.sfx('levelup'); FX.text(W / 2, 300, `레벨 ${DR.level}! 더 빨라져요`, '#fff', 64, 1.2); }
+      else if (DR.delivered % 6 === 0) { DR.level++; Flow.level = DR.level; GHud.level(DR.level); Snd.sfx('levelup'); FX.text(W / 2, 300, `레벨 ${DR.level}! 더 바빠져요`, '#fff', 64, 1.2); if (DR.level % 5 === 0 && DR.hearts < 3) { DR.hearts++; GHud.hearts(DR.hearts, 3); Snd.sfx('pickup'); FX.text(W / 2, 400, '하트 하나 회복!', '#ff5c7a', 52, 1.2); } }
     } else {
       DR.wrong++; DR.streak = 0;
       Snd.sfx('error'); shake(8);
@@ -3470,10 +3471,10 @@ Scenes.drone = {
     // 드론 보내기
     if (!DR.gold) {
       const waiting = DR.drones.filter(d => d.state === 'wait').length;
-      const target = DR.story ? (DR.delivered < 3 ? 1 : DR.delivered < 8 ? 2 : 3) : Math.min(3, 1 + Math.floor(DR.level / 2));
+      const target = DR.story ? (DR.delivered < 3 ? 1 : DR.delivered < 8 ? 2 : 3) : Math.min(3, 1 + Math.floor(DR.level / 3));
       DR.spawnT -= dt;
       const flying = DR.drones.filter(d => d.state === 'fly').length;
-      if (waiting < target && DR.spawnT <= 0 && !(DR.story && DR.delivered + waiting + flying >= DR.need)) { this.spawn(); DR.spawnT = DR.story ? 1.2 : Math.max(.5, 1.4 - DR.level * .1); }
+      if (waiting < target && DR.spawnT <= 0 && !(DR.story && DR.delivered + waiting + flying >= DR.need)) { this.spawn(); DR.spawnT = DR.story ? 1.2 : Math.max(.9, 1.6 - DR.level * .05); }
     }
     // 돌발 OX
     if (DR.story) { if (DR.oxAt.length && DR.delivered >= DR.oxAt[0] && DR.drones.some(d => d.state === 'wait')) { DR.oxAt.shift(); this.ox(); } }
@@ -3604,7 +3605,7 @@ const BG = {
     this.sky(ctx, '#7fd0ff', '#e3f6ff');
     this.driftClouds(ctx, dt, .8);
     this.hills(ctx, 640, 70, 360, '#b5ecc4', .4);
-    // 오른쪽 위 눈 덮인 산 (평창)
+    // 오른쪽 위 눈 덮인 산
     ctx.fillStyle = '#d9e8f7'; ctx.beginPath(); ctx.moveTo(1380, 640); ctx.lineTo(1620, 250); ctx.lineTo(1860, 640); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(1550, 365); ctx.lineTo(1620, 250); ctx.lineTo(1690, 365); ctx.lineTo(1650, 340); ctx.lineTo(1620, 370); ctx.lineTo(1585, 340); ctx.fill();
     this.hills(ctx, 760, 40, 300, '#8fe0a8', 1.4);
@@ -3671,7 +3672,7 @@ const CHAPTERS = [
     fact: '혁신제품 시범구매는 기술은 좋지만 실적이 없는 제품을 조달청 예산으로 사서 공공기관이 먼저 써 보게 하는 제도예요. 서류는 나라장터에서 온라인으로 처리해요.' },
   { game: 'drone', no: '작전 4', name: '비축기지 드론 배송', at: 5, color: '#ff9f43', dark: '#d9741c', ic: 'i-drone', step: '요양원 도착',
     intro: [
-      { w: 'zero', e: 'alert', t: '폭설 경보. 평창 일대 기관마다 물자가 급히 필요합니다.' },
+      { w: 'zero', e: 'alert', t: '폭설 경보. 수원 일대 기관마다 물자가 급히 필요합니다.' },
       { w: 'dali', e: 'determined', t: '비축기지 드론을 띄워요! 드론을 눌러 같은 색 기관까지 길을 그려 주세요.' },
       { w: 'narumi', e: 'serious', t: '회색 사재기 드론은 반납함으로! 마지막엔 덧창을 실은 금빛 드론이 떠요.' }
     ],
@@ -3721,7 +3722,7 @@ function prologueLines() {
     { w: 'dali', e: 'smile', t: '안녕하세요! 조달청 마스코트 달이예요. 조달청은 학교, 병원, 소방서처럼 나라 기관에 필요한 물건을 대신 사 주는 곳이에요.' },
     { w: 'narumi', e: 'proud', t: '저는 나르미! 싸게만 사는 게 아니라 공정하게, 새 기술도 키우면서 사요.' },
     { w: 'zero', e: 'neutral', t: '조달 AI 코넵스-제로입니다. 오늘 요청 18만 4천 건 처리 완료. 효율 0.1% 요청 1건은 기각합니다.' },
-    { w: 'dali', e: 'surprised', t: '잠깐만요! 평창 산골 요양원이에요. 98세 참전용사 어르신 방이 9도래요!' },
+    { w: 'dali', e: 'surprised', t: '잠깐만요! 수원보훈요양원이에요. 98세 참전용사 어르신 방이 9도래요!' },
     { w: 'narumi', e: 'determined', t: '기각은 안 돼요. 작전 4개로 어르신께 따뜻한 겨울을 조달해요!' }
   ];
 }
@@ -3745,7 +3746,7 @@ Scenes.map = {
         <div class="mn-name">${C.name}<small>${C.no} · ${GAME_INFO[C.game].ref}</small></div></div>`;
     }).join('');
     const [gx, gy] = MAP_PTS[6];
-    $('#mapNodes').innerHTML = nodes + `<div class="mnode goal ${S.ch >= 4 ? 'next' : 'lock'}" style="left:${gx}px;top:${gy - 130}px">${S.ch >= 4 ? `<img class="mn-here" src="${IMG.duo.src}" alt="">` : ''}<button class="mn-btn" data-i="goal" aria-label="평창 요양원"><svg><use href="#i-home"/></svg></button><div class="mn-name">평창 요양원<small>0.1%의 어르신</small></div></div>`;
+    $('#mapNodes').innerHTML = nodes + `<div class="mnode goal ${S.ch >= 4 ? 'next' : 'lock'}" style="left:${gx}px;top:${gy - 130}px">${S.ch >= 4 ? `<img class="mn-here" src="${IMG.duo.src}" alt="">` : ''}<button class="mn-btn" data-i="goal" aria-label="수원보훈요양원"><svg><use href="#i-home"/></svg></button><div class="mn-name">수원보훈요양원<small>0.1%의 어르신</small></div></div>`;
     $$('#mapNodes .mn-btn').forEach(b => b.addEventListener('click', () => this.tap(b.dataset.i)));
     const steps = ['아이디어', ...CHAPTERS.map(c => c.step)];
     $('#mapJourney').innerHTML = `<small>다온윈도 덧창의 여정</small><div>${steps.map((t, k) => `<span class="${k <= S.ch ? 'on' : ''}${k === S.ch + 1 ? ' now' : ''}">${t}</span>`).join('<i></i>')}</div>`;
@@ -3792,7 +3793,7 @@ Scenes.warm = {
       const ready = () => { WARM.ready = true; $$('#warmGrid .wbtn')[0].classList.add('pulse'); if (G.demo) this.bot(); };
       if (G.demo) { ready(); return; }
       Dialog.open([
-        { w: 'dali', e: 'proud', t: '도착했어요! 평창 요양원이에요.' },
+        { w: 'dali', e: 'proud', t: '도착했어요! 수원보훈요양원이에요.' },
         { w: 'narumi', e: 'determined', t: '창문을 하나씩 눌러서 발열 덧창을 달아 주세요!' }], { busts: true, onDone: ready });
     });
   },
@@ -3833,7 +3834,7 @@ Scenes.warm = {
     rr(ctx, 520, 220, 880, 760, 30); ctx.fillStyle = '#f7efe4'; ctx.fill();
     ctx.fillStyle = '#c96a4a'; ctx.beginPath(); ctx.moveTo(470, 240); ctx.lineTo(960, 70); ctx.lineTo(1450, 240); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(470, 240); ctx.lineTo(960, 70); ctx.lineTo(1450, 240); ctx.lineTo(1450, 214); ctx.lineTo(960, 52); ctx.lineTo(470, 214); ctx.closePath(); ctx.fill();
-    rr(ctx, 760, 160, 400, 52, 16); ctx.fillStyle = '#fff'; ctx.fill(); ctx.fillStyle = '#7a4a2e'; ctx.font = `900 28px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('소망보훈요양원 평창 분원', 960, 187);
+    rr(ctx, 760, 160, 400, 52, 16); ctx.fillStyle = '#fff'; ctx.fill(); ctx.fillStyle = '#7a4a2e'; ctx.font = `900 28px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('수원보훈요양원', 960, 187);
     WARM_POS.forEach(([x, y], i) => {
       const wx = 660 + x, wy = 300 + y;
       rr(ctx, wx - 12, wy - 12, 224, 264, 22); ctx.fillStyle = '#8a5a3c'; ctx.fill();
@@ -4261,7 +4262,7 @@ const DOGAM = [
     real: ['2025년 공공조달 규모는 238.5조원으로 역대 최대였어요.', '2025년 공공조달 계약액의 62.7%인 149.5조원을 중소기업이 맡았어요.', '다수공급자계약은 품질과 성능이 비슷한 여러 업체와 계약해 수요기관이 고르게 하는 제도예요.'],
     terms: [['수요기관', '조달청에 물건을 사 달라고 요청하는 공공기관']] },
   { ic: 'i-alert', name: '긴급조달·재난 지원', sub: '속도가 곧 가치', lead: '재난이 나면 조달 절차를 줄이고 부담을 덜어 구호·복구 물품이 빨리 도착하게 해요.',
-    game: ['작전 4의 폭설 경보: 평창 기관마다 물자가 급히 필요해요'],
+    game: ['작전 4의 폭설 경보: 수원 기관마다 물자가 급히 필요해요'],
     real: ['2025년 산불 피해 대응 때 7~40일인 일반 입찰 대신 5일만 공고하는 긴급입찰을 했어요.', '입찰 시간을 줄이려 수의계약을 적극 활용했어요.', '1~2주 걸리는 납품검사를 한시적으로 면제하고, 특별재난지역 기관의 조달수수료 납부를 유예했어요.', '피해 기업에는 납기를 연장하고 지체상금을 면제하거나 줄여 줬어요.'],
     terms: [['지체상금', '약속한 날짜보다 늦게 납품했을 때 내는 돈']] },
   { ic: 'i-leaf', name: '녹색조달', sub: '오래 쓰는 친환경 선택', lead: '공공기관이 환경에 덜 해로운 녹색제품을 우선 사서 탄소와 비용을 함께 줄이는 제도예요.',
@@ -4273,7 +4274,7 @@ const DOGAM = [
     real: ['알루미늄·구리·납·아연·주석·니켈 같은 비철금속을 비축해요.', '조달청 비축이용업체로 등록된 실수요 업체에 판매·대여해요.', '사재기를 막으려고 업체마다 한 주에 살 수 있는 양에 한도를 둬요.', '전매가 드러나면 차익 환수, 위약금, 등록 말소 조치를 받아요.', '차량용 요소도 정부 비축물자로 관리해요.'],
     terms: [['전매', '사들인 물건을 그대로 되팔아 차익을 남기는 것']] },
   { ic: 'i-info', name: '2050 가상 설정과 출처', sub: '상상과 사실 구분하기', fic: true, lead: '이 게임은 2050년을 상상한 이야기예요. 아래는 실제가 아닌 가상 설정이에요.',
-    game: ['코넵스-제로, 조달관제센터의 2050년 모습', '무철거 발열 덧창, 다온윈도', '소망보훈요양원 평창 분원, 강춘식 어르신, 일병 박영호', '게임 속 업체 이름과 드론이 나르는 병원·학교·소방서 물자. 실제 비축물자는 원자재예요', '1년 뒤 장면의 숫자'],
+    game: ['코넵스-제로, 조달관제센터의 2050년 모습', '무철거 발열 덧창, 다온윈도', '수원보훈요양원은 실제 기관이고, 2050년의 낡은 창문과 방 온도, 강춘식 어르신, 일병 박영호는 가상', '게임 속 업체 이름과 드론이 나르는 병원·학교·소방서 물자. 실제 비축물자는 원자재예요', '1년 뒤 장면의 숫자'],
     real: ['나르미·달이: 조달청 공식 마스코트, 이미지 저작권은 조달청에 있음', '조달청 누리집: 혁신제품 지정·시범구매 안내, 비축사업 안내, 종합심사낙찰제 안내', '국가법령정보센터: 국가계약법 제25조 공동계약, 공정거래법 제40조 부당한 공동행위', '조달청 「2025 공공조달 통계연보」(2026년 6월 발간)', '조달청 산불 피해 긴급 조달지원 보도(2025년 3월)', '녹색제품 구매촉진법 시행령 개정(2024년 2월 국무회의 의결, 2025년 1월 시행)', '조달청 벤처나라 개통 보도(2016년 10월)'],
     realTitle: '정책 정보 출처', terms: [] }
 ];
