@@ -3615,6 +3615,8 @@ const DR_HUB = { x: 250, y: 560 };
 const DR_PADS = [[420, 360], [440, 560], [420, 760]];
 const DR_SPOT = { hosp: [1640, 300], school: [1700, 760], fire: [1150, 880], home: [1090, 250], bin: [680, 870], clinic: [1390, 570] };
 const DR_ORDER = ['hosp', 'school', 'fire', 'home'];
+/* PC: 기관 번호. 드론을 고른 뒤 기관을 누르거나 숫자키를 누르면 길이 저절로 이어짐 */
+const DR_NUM = ['home', 'hosp', 'school', 'fire', 'bin', 'clinic'];
 /* 게임 골라 하기 새 요소: 10 돌풍, 20 비행 금지 구역, 30 긴급 드론, 40 보건소 */
 const DR_NEW = {
   10: ['dali', '새 요소! 돌풍이 불면 드론이 옆으로 밀려요'],
@@ -3664,12 +3666,37 @@ Scenes.drone = {
     if (!(Flow.state === 'play' || DR.tut)) return;
     let best = null, bd = 95;
     for (const d of DR.drones) { if (d.state !== 'wait') continue; const r = Math.hypot(p.x - d.x, p.y - d.y); if (r < bd) { bd = r; best = d; } }
-    if (!best) return;
-    DR.drag = { d: best, pts: [{ x: best.x, y: best.y }, { x: p.x, y: p.y }] };
+    if (!best) {
+      // 기관을 누르면 고른 드론(없으면 가장 급한 드론)이 그곳으로 감
+      const k = this.placeAt(p.x, p.y), d = this.picked();
+      if (k && d) this.route(d, k);
+      return;
+    }
+    DR.drag = { d: best, pts: [{ x: best.x, y: best.y }, { x: p.x, y: p.y }], sx: p.x, sy: p.y, far: 0 };
     Snd.sfx('pickup');
+  },
+  /* 고른 드론. 고르지 않았으면 가장 급한 드론 */
+  picked() {
+    if (DR.sel && DR.sel.state === 'wait') return DR.sel;
+    let best = null; for (const d of DR.drones) if (d.state === 'wait' && (!best || d.life / d.max < best.life / best.max)) best = d; return best;
+  },
+  /* 자동으로 휘어진 길을 만들어 보냄 */
+  route(d, kind) {
+    const [px, py] = DR_SPOT[kind];
+    const mx = (d.x + px) / 2 + (d.pad - 1) * 60, my = (d.y + py) / 2 + (d.pad - 1) * 90;
+    const pts = []; for (let i = 0; i <= 12; i++) { const k = i / 12; pts.push({ x: lerp(lerp(d.x, mx, k), lerp(mx, px, k), k), y: lerp(lerp(d.y, my, k), lerp(my, py, k), k) }); }
+    DR.sel = null; this.send(d, pts.slice(0, -1), kind);
+  },
+  key(k, down) {
+    if (!down || !(Flow.state === 'play' || DR.tut)) return;
+    const i = '123456'.indexOf(k); if (i < 0) return;
+    const kind = DR_NUM[i]; if (kind === 'clinic' && !this.clinicOn()) return true;
+    const d = this.picked(); if (d) this.route(d, kind);
+    return true;
   },
   pmove(p, down) {
     const g = DR.drag; if (!g || !down) return;
+    g.far = Math.max(g.far, Math.hypot(p.x - g.sx, p.y - g.sy));
     const last = g.pts[g.pts.length - 1];
     if (Math.hypot(p.x - last.x, p.y - last.y) < 16) return;
     g.pts.push({ x: p.x, y: p.y });
@@ -3677,6 +3704,8 @@ Scenes.drone = {
   },
   pup(p) {
     const g = DR.drag; DR.drag = null; if (!g) return;
+    // 끌지 않고 누르기만 했으면 그 드론을 고름
+    if (g.far < 30 && (!p || Math.hypot(p.x - g.sx, p.y - g.sy) < 30)) { DR.sel = DR.sel === g.d ? null : g.d; Snd.sfx('click'); return; }
     if (p) g.pts.push({ x: p.x, y: p.y });
     const end = g.pts[g.pts.length - 1];
     const k = this.placeAt(end.x, end.y);
@@ -3753,7 +3782,7 @@ Scenes.drone = {
     const one = (kind, pad) => () => { DR.drones = []; this.spawn({ pad, kind, life: 999 }); };
     const hand = () => { const d = DR.drones.find(d => d.state === 'wait'); if (!d || DR.drag) return null; const [x2, y2] = DR_SPOT[d.kind]; return { mode: 'drag', x: d.x, y: d.y, x2, y2, per: 1.6 }; };
     Tutor.run([
-      { text: '드론을 <b>꾹 누른 채</b> 같은 색 <b>병원</b>까지 길을 그려요', who: 'dali', ex: 'determined', top: true, enter: one('hosp', 0), hand, check: () => DR.delivered >= 1, wait: .5 },
+      { text: coarse ? '드론을 <b>꾹 누른 채</b> 같은 색 <b>병원</b>까지 길을 그려요' : '같은 색 <b>병원을 클릭</b>하면 드론이 날아가요. 숫자키 <b>2</b>나 드론에서 끌어 그려도 돼요', who: 'dali', ex: 'determined', top: true, enter: one('hosp', 0), hand, check: () => DR.delivered >= 1, wait: .5 },
       { text: '회색 <b>사재기 드론</b>은 <b>반납함</b>으로 보내요. 물자는 꼭 필요한 곳에 먼저!', who: 'dali', ex: 'serious', top: true, enter: one('bin', 2), hand, check: () => DR.delivered >= 2, wait: .5 },
       { text: DR.story ? '드론 둘레의 고리가 다 줄기 전에 보내요. 드론끼리 부딪히면 잠깐 멈춰요. 15건을 배송해 주세요!' : '늦거나 다른 곳으로 보내면 <b>하트</b>가 줄어요. 드론끼리 부딪히지 않게!', who: 'narumi', ex: 'proud', top: true, button: '시작하기' }
     ], () => { DR.tut = 0; DR.drones = []; DR.delivered = 0; DR.wrong = 0; DR.late = 0; DR.score = 0; DR.streak = 0; if (DR.story) this.goalHud(); GHud.score(0, true); done(); });
@@ -3862,6 +3891,7 @@ Scenes.drone = {
       if (k === 'clinic' && !this.clinicOn()) continue;
       const [x, y] = DR_SPOT[k]; const p = DR.pulse[k] || 0;
       ctx.save(); ctx.translate(x, y); ctx.scale(1 + p * .12, 1 + p * .12); drawPlace(ctx, k, 0, 0, t, want.has(k) ? 1 : 0); ctx.restore();
+      if (!coarse) { const n = DR_NUM.indexOf(k) + 1; ctx.fillStyle = '#1f2b4d'; ctx.beginPath(); ctx.arc(x - 92, y - 92, 26, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `950 32px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n, x - 92, y - 90); }
     }
     if (DR.gold && DR.gold.state !== 'done') { const [x, y] = DR_SPOT.home; label(ctx, '어르신 방 창문이 기다려요', x, y - 150, 30, '#ff9f43', '#fff'); }
     // 비행 금지 구역
@@ -3901,7 +3931,9 @@ Scenes.drone = {
       if (d.urgent && d.state === 'wait') { ctx.save(); ctx.globalAlpha *= .4 + .4 * Math.sin(t * 12); ctx.strokeStyle = '#ff3d64'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(d.x, d.y, 92, 0, 7); ctx.stroke(); ctx.restore(); }
       if (d.gold) { ctx.save(); ctx.globalAlpha *= .45 + .25 * Math.sin(t * 6); ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(d.x, d.y, 100, 0, 7); ctx.fill(); ctx.restore(); }
       const hov = d.state === 'fly' || d.state === 'back' ? Math.sin(t * 8 + d.pad) * 4 : 0;
-      drawDroneTop(ctx, d.x, d.y + hov, d.kind, t + d.pad, s, d.ang, DR.drag && DR.drag.d === d ? 1 : 0);
+      const chosen = d.state === 'wait' && !DR.drag && this.picked() === d && (DR.sel === d || !coarse);
+      if (chosen) { ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -t * 40; ctx.beginPath(); ctx.arc(d.x, d.y, 100, 0, 7); ctx.stroke(); ctx.restore(); }
+      drawDroneTop(ctx, d.x, d.y + hov, d.kind, t + d.pad, s, d.ang, (DR.drag && DR.drag.d === d) || DR.sel === d ? 1 : 0);
       if (d.stun > 0) { for (let i = 0; i < 3; i++) { const aa = t * 6 + i * 2.1; drawStar5(ctx, d.x + Math.cos(aa) * 50, d.y - 50 + Math.sin(aa) * 14, 12, '#ffd23f'); } }
       if (d.state === 'wait') label(ctx, d.urgent ? '긴급 ' + PLACE[d.kind].name : d.kind === 'bin' ? '사재기' : d.gold ? '다온윈도 덧창' : PLACE[d.kind].name + ' 물자', d.x, d.y + 104, d.gold ? 30 : 24, '#fff', d.gold ? '#e08a00' : shade(PLACE[d.kind].color, -.3));
       ctx.restore();
