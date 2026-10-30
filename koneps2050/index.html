@@ -2708,7 +2708,8 @@ $('#pzHome').addEventListener('click', () => { Snd.sfx('click'); G.paused = fals
    파란 실은 국가계약법이 허용하는 공동계약이라 끊으면 감점
    ========================================================= */
 const CT = {};
-const CT_SLOTS = [[430, 440], [960, 410], [1490, 440], [430, 805], [960, 830], [1490, 805]];
+/* 업체 묶음 자리: 휴대폰에서도 넉넉하게 한 줄에 셋 */
+const CT_SLOTS = [[400, 580], [960, 580], [1520, 580]];
 const CT_NAMES = ['가온산업', '바른물산', '한빛상사', '새솔건설', '온누리', '미래테크', '청람', '해든', '다올', '라온', '하늘', '누리', '든솔', '시온'];
 const CT_RED = ['가격 담합', '들러리', '투찰가 공유'];
 /* 게임 골라 하기 새 요소: 99레벨까지 나오는 비율이 조금씩 늘어남 */
@@ -2737,26 +2738,25 @@ Scenes.cut = {
   exit() { CT.done = true; },
   start() { CT.t = 0; if (!CT.groups.length) this.spawn(); },
   goalHud() { GHud.goal('담합 고리 끊기', CT.cleared / CT.need, `${CT.cleared}/${CT.need}`); },
-  freeSlot() { const used = new Set(CT.groups.map(g => g.slot)); const f = [...Array(6).keys()].filter(i => !used.has(i)); return f.length ? pick(f) : -1; },
+  freeSlot() { const used = new Set(CT.groups.map(g => g.slot)); const f = [...Array(CT_SLOTS.length).keys()].filter(i => !used.has(i)); return f.length ? pick(f) : -1; },
   /* 업체 묶음 하나 만들기 */
   spawn(o = {}) {
     const slot = o.slot != null ? o.slot : this.freeSlot(); if (slot < 0) return null;
     const lv = CT.story ? 1 + Math.min(4, CT.cleared / 3) : CT.level;
-    const k = o.k || Math.min(6, 3 + Math.floor(Math.random() * (1 + lv * .35)));
+    const k = o.k || Math.min(5, 3 + Math.floor(Math.random() * (1 + lv * .2)));
     const [cx, cy] = CT_SLOTS[slot];
-    const R = 100 + k * 10, a0 = rand(0, 6.28);
+    const R = 125 + k * 14, a0 = rand(0, 6.28);
     const names = shuffle([...CT_NAMES]);
     const nodes = Array.from({ length: k }, (_, i) => { const a = a0 + i / k * Math.PI * 2; return { x: cx + Math.cos(a) * R * rand(.85, 1.05), y: cy + Math.sin(a) * R * .78 * rand(.85, 1.05), color: CO_COLORS[(i + slot) % CO_COLORS.length], name: names[i], ph: rand(0, 6) }; });
     const edges = [];
     for (let i = 0; i < k; i++) { if (k === 2 && i === 1) break; if (k === 3 || i < k - 1 || k >= 4) edges.push({ a: i, b: (i + 1) % k }); }
-    if (k >= 5) edges.push({ a: 0, b: Math.floor(k / 2) });
-    const blueP = o.blue != null ? -1 : clamp(.12 + lv * .03, .12, .3);
+    const blueP = o.blue != null ? -1 : clamp(.12 + lv * .02, .12, .25);
     edges.forEach(e => { e.type = Math.random() < blueP ? 'blue' : 'red'; e.cut = false; e.label = e.type === 'red' ? pick(CT_RED) : '공동계약'; e.cutT = 0; e.ph = rand(0, 6); });
     if (o.types) edges.forEach((e, i) => { e.type = o.types[i] || 'red'; e.label = e.type === 'red' ? pick(CT_RED) : '공동계약'; });
     if (!edges.some(e => e.type === 'red')) { edges[0].type = 'red'; edges[0].label = pick(CT_RED); }
     edges.forEach(e => { e.hp = 1; });
     const L = CT.story || o.types ? 0 : CT.level;
-    const life = o.life || (CT.story ? 9.5 / D().k : L < 50 ? Math.max(5.5, 9 - L * .25) : Math.max(4.6, 5.5 - (L - 50) * .02));
+    const life = o.life || (CT.story ? 9.5 / D().k : L < 50 ? Math.max(6.5, 10 - L * .2) : Math.max(5.5, 6.5 - (L - 50) * .02));
     const g = { slot, cx, cy, nodes, edges, life, max: life, state: 'live', fade: 0, t: 0, rot: 0, spin: 0, regrow: false };
     nodes.forEach(n => { n.ox = n.x - cx; n.oy = (n.y - cy) / .78; });
     if (L >= 10) edges.forEach(e => { if (e.type === 'red' && Math.random() < Math.min(.4, .12 + (L - 10) * .0032)) { e.hp = 2; e.thick = true; e.label = '카르텔'; } });
@@ -2814,7 +2814,7 @@ Scenes.cut = {
     Snd.sfx('success'); FX.stars(g.cx, g.cy, 12); FX.ring(g.cx, g.cy, '#3ddc84', 40, 260, .5, 12);
     FX.text(g.cx, g.cy, '공정 경쟁!', '#3ddc84', 52, 1.1);
     if (CT.story) { this.goalHud(); if (CT.cleared >= CT.need) this.win(); }
-    else if (CT.cleared % 5 === 0 && CT.level < 99) { CT.level++; if (CT_NEW[CT.level]) later(1200, () => buddy(CT_NEW[CT.level][0], 'surprised', CT_NEW[CT.level][1], 3800)); Flow.level = CT.level; GHud.level(CT.level); Snd.sfx('levelup'); if (CT.fever <= 0) Snd.bgm(Flow.song()); FX.text(W / 2, 300, `레벨 ${CT.level}!`, '#fff', 64, 1.2); if (CT.level % 5 === 0 && CT.hearts < 3) { CT.hearts++; GHud.hearts(CT.hearts, 3); Snd.sfx('pickup'); FX.text(W / 2, 400, '하트 하나 회복!', '#ff5c7a', 52, 1.2); } }
+    else if (CT.cleared % 6 === 0 && CT.level < 99) { CT.level++; if (CT_NEW[CT.level]) later(1200, () => buddy(CT_NEW[CT.level][0], 'surprised', CT_NEW[CT.level][1], 3800)); Flow.level = CT.level; GHud.level(CT.level); Snd.sfx('levelup'); if (CT.fever <= 0) Snd.bgm(Flow.song()); FX.text(W / 2, 300, `레벨 ${CT.level}!`, '#fff', 64, 1.2); if (CT.level % 5 === 0 && CT.hearts < 3) { CT.hearts++; GHud.hearts(CT.hearts, 3); Snd.sfx('pickup'); FX.text(W / 2, 400, '하트 하나 회복!', '#ff5c7a', 52, 1.2); } }
   },
   fail(g) {
     g.state = 'fail'; g.fade = 0; CT.fails++; CT.combo = 0;
@@ -2847,11 +2847,11 @@ Scenes.cut = {
     CT.tut = 1;
     Tutor.run([
       { text: '빨간 실은 업체끼리 짜고 치는 <b>담합</b>이에요. 손가락으로 <b>그어서</b> 끊어 보세요!', who: 'narumi', ex: 'determined', top: true,
-        enter: () => { CT.groups = []; this.spawn({ slot: 4, k: 2, types: ['red'], life: 999 }); },
+        enter: () => { CT.groups = []; this.spawn({ slot: 1, k: 2, types: ['red'], life: 999 }); },
         hand: () => { const r = this.anyRed(); if (!r) return null; const [a, b] = this.seg(r.g, r.e); const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; return { mode: 'drag', x: mx, y: my - 130, x2: mx, y2: my + 130, per: 1.3 }; },
         check: () => CT.cleared >= 1, wait: .6 },
       { text: '파란 실은 법이 허용한 <b>공동계약</b>이에요. <b>빨간 실만</b> 끊어요!', who: 'narumi', ex: 'serious', top: true,
-        enter: () => { CT.groups = []; this.spawn({ slot: 4, k: 3, types: ['red', 'blue', 'red'], life: 999 }); },
+        enter: () => { CT.groups = []; this.spawn({ slot: 1, k: 3, types: ['red', 'blue', 'red'], life: 999 }); },
         hand: () => { const r = this.anyRed(); if (!r) return null; const [a, b] = this.seg(r.g, r.e); const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.y - a.y, dy = a.x - b.x, l = Math.hypot(dx, dy) || 1; return { mode: 'drag', x: mx - dx / l * 80, y: my - dy / l * 80, x2: mx + dx / l * 80, y2: my + dy / l * 80, per: 1.2 }; },
         check: () => CT.cleared >= 2, wait: .6 },
       { text: CT.story ? '시간 안에 못 끊으면 <b>담합이 낙찰</b>돼요. 한 번에 여러 개를 끊으면 보너스! 담합 고리 12묶음을 끊어 주세요' : '못 끊거나 공동계약을 끊으면 <b>하트</b>가 줄어요. 한 번에 여러 개를 끊으면 보너스!', who: 'dali', ex: 'proud', top: true, button: '시작하기' }
@@ -2905,7 +2905,7 @@ Scenes.cut = {
     if (CT.fever > 0) { CT.fever -= dt; if (CT.fever <= 0) { GHud.fever(false); Snd.bgm(Flow.song()); } }
     // 동시에 떠 있는 묶음 수
     const live = CT.groups.filter(g => g.state === 'live').length;
-    const target = CT.story ? (CT.cleared < 3 ? 1 : CT.cleared < 8 ? 2 : 3) : (CT.level >= 60 ? 4 : Math.min(3, 1 + Math.floor(CT.level / 3)));
+    const target = CT.story ? (CT.cleared < 3 ? 1 : CT.cleared < 8 ? 2 : 3) : (CT.level < 3 ? 1 : CT.level < 9 ? 2 : 3);
     CT.spawnT -= dt;
     if (live < target && CT.spawnT <= 0 && !(CT.story && CT.cleared + live >= CT.need + 1)) { this.spawn(); CT.spawnT = .7; }
     // 돌발 OX
@@ -2928,7 +2928,7 @@ Scenes.cut = {
       ctx.save(); ctx.globalAlpha = a;
       // 남은 시간 고리
       if (g.state === 'live' && g.max < 900) {
-        const k = clamp(g.life / g.max, 0, 1), R0 = 100 + g.nodes.length * 10, rx = R0 + 70, ry = R0 * .78 + 78;
+        const k = clamp(g.life / g.max, 0, 1), R0 = 125 + g.nodes.length * 14, rx = R0 + 60, ry = R0 * .78 + 70;
         ctx.strokeStyle = 'rgba(31,43,77,.08)'; ctx.lineWidth = 14; ctx.beginPath(); ctx.ellipse(g.cx, g.cy + 8, rx, ry, 0, 0, 7); ctx.stroke();
         ctx.strokeStyle = k > .5 ? '#3ddc84' : k > .25 ? '#ffc928' : '#ff3d64'; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.ellipse(g.cx, g.cy + 8, rx, ry, 0, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
@@ -2967,7 +2967,8 @@ Scenes.cut = {
           ctx.strokeStyle = '#3ba4ff'; ctx.lineWidth = 9; ctx.setLineDash([22, 12]); ctx.stroke(); ctx.setLineDash([]);
         }
         ctx.restore();
-        if (!ghost && (!BIGT() || (e.thick && e.hp > 1))) label(ctx, e.thick && e.hp > 1 ? '카르텔 ×2' : e.label, (A.x + B.x) / 2, (A.y + B.y) / 2 - 26, 24, '#fff', red ? (e.thick ? '#8a0c26' : '#d61f45') : '#1f74c9');
+        const lmx = (A.x + B.x) / 2, lmy = (A.y + B.y) / 2, ld = Math.hypot(lmx - g.cx, lmy - g.cy) || 1;
+        if (!ghost && ((!BIGT() && !(coarse && g.nodes.length >= 5)) || (e.thick && e.hp > 1))) label(ctx, e.thick && e.hp > 1 ? '카르텔 ×2' : e.label, lmx + (lmx - g.cx) / ld * 34, lmy + (lmy - g.cy) / ld * 30, 22, '#fff', red ? (e.thick ? '#8a0c26' : '#d61f45') : '#1f74c9');
       }
       // 업체
       for (const [i, n] of g.nodes.entries()) {
@@ -2975,7 +2976,7 @@ Scenes.cut = {
         const mood = g.state === 'fail' ? 'bad' : sly ? 'sly' : 'happy';
         const y = n.y + Math.sin(t * 2 + n.ph) * 4;
         ctx.save(); if (n.paper) ctx.globalAlpha *= this.vis(n) ? .55 : .15;
-        drawCompany(ctx, n.x, y, 46, n.paper ? '#c9d6ea' : n.color, mood, sly ? 1 + Math.sin(t * 10 + n.ph) * .03 : 1);
+        drawCompany(ctx, n.x, y, 44, n.paper ? '#c9d6ea' : n.color, mood, sly ? 1 + Math.sin(t * 10 + n.ph) * .03 : 1);
         ctx.restore();
         if (!BIGT()) label(ctx, n.name, n.x, y + 66, 22, n.paper ? '#8a9bb3' : '#1f2b4d', '#fff');
       }
