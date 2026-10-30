@@ -2918,8 +2918,8 @@ Scenes.price = {
       if (PR.lens > 0) PR.lens--;
       if (PR.streak >= 3 && PR.fever <= 0) this.feverOn();
       else if (PR.fever > 0) { PR.fever--; if (PR.fever <= 0) { GHud.fever(false); Snd.bgm('puzzle'); } }
-      PR.w = Math.max(PR.story ? .055 : .035, PR.w - (PR.story ? .006 : .008));
-      PR.v = Math.min(1.7, PR.v + (PR.story ? .035 : .06));
+      PR.w = Math.max(PR.story ? .075 : .055, PR.w - (PR.story ? .004 : .006));
+      PR.v = Math.min(PR.story ? 1 : 1.05, PR.v + (PR.story ? .025 : .045));
       if (PR.story) { this.goalHud(); if (PR.deals >= PR.need) this.win(); }
       else if (PR.deals % 5 === 0) { PR.level++; Flow.level = PR.level; GHud.level(PR.level); Snd.sfx('levelup'); FX.text(W / 2, 345, `레벨 ${PR.level}! 바늘이 흔들려요`, '#fff', 50, 1.2); }
     } else {
@@ -2968,7 +2968,7 @@ Scenes.price = {
     if (!(fl === 'play' || PR.tut || fl === 'count' || fl === 'tutor')) { GHud.score(PR.score); return; }
     if (PR.phase === 'run' && (fl === 'play' || PR.tut || fl === 'tutor')) {
       let v = PR.v * (PR.fever > 0 ? .7 : 1);
-      if (!PR.story && PR.level >= 3) v *= 1 + .35 * Math.sin(BG.t * (1.5 + PR.level * .2));
+      if (!PR.story && PR.level >= 3) v *= 1 + .25 * Math.sin(BG.t * (1.5 + PR.level * .2));
       PR.u += PR.dir * v * dt;
       if (PR.u >= 1) { PR.u = 1; PR.dir = -1; PR.swings++; } if (PR.u <= 0) { PR.u = 0; PR.dir = 1; PR.swings++; }
       if (fl === 'play' && !PR.tut && !PR.done && PR.swings >= (PR.story ? 6 : Math.max(3, 5 - Math.floor(PR.level / 2)))) this.timeout();
@@ -3082,7 +3082,7 @@ Scenes.beat = {
     const story = G.mode === 'story';
     Object.assign(BT, {
       story, notes: [], genBar: 1, t0: null, sp: Snd.stepLen('beat'), pos: -16, travel: 1.9, score: 0, combo: 0, maxCombo: 0, hits: 0, perfect: 0, misses: 0, redHits: 0, passes: 0,
-      trust: 100, level: 1, fever: false, stampT: 0, judge: null, judgeT: 0, done: false, tut: 0, endBar: G.demo ? 3 : 20, started: false, pauseAt: null, oxBars: G.demo ? [] : [7, 14], rest: new Set(), holdTo: -1, beatFlash: 0, lastBeat: -1, lastOx: -1
+      trust: 100, level: 1, fever: false, stampT: 0, judge: null, judgeT: 0, done: false, tut: 0, endBar: G.demo ? 3 : story ? 20 : Infinity, started: false, pauseAt: null, oxBars: G.demo ? [] : [7, 14], rest: new Set(), holdTo: -1, beatFlash: 0, lastBeat: -1, lastOx: -1
     });
     GHud.show({ game: 'beat', name: GAME_INFO.beat.name, level: !story, goal: true });
     this.hud();
@@ -3181,7 +3181,7 @@ Scenes.beat = {
       { text: BT.story ? '음악에 맞춰 결재해요. 중간에 <b>돌발 퀴즈</b>를 맞히면 피버 타임!' : '놓치거나 반칙 서류를 찍으면 <b>신뢰</b>가 줄어요. 끝까지 버텨 봐요!', who: 'dali', ex: 'proud', top: true, button: '시작하기' }
     ], () => {
       BT.tut = 0; BT.notes = []; BT.hits = 0; BT.perfect = 0; BT.misses = 0; BT.redHits = 0; BT.passes = 0; BT.combo = 0; BT.maxCombo = 0; BT.score = 0;
-      BT.endBar = G.demo ? 3 : 20; BT.started = false; BT.genBar = 1; Snd.bgm('map'); GHud.score(0, true); done();
+      BT.endBar = G.demo ? 3 : BT.story ? 20 : Infinity; BT.started = false; BT.genBar = 1; Snd.bgm('map'); GHud.score(0, true); done();
     });
   },
   pdown() { this.tap(); },
@@ -3215,7 +3215,7 @@ Scenes.beat = {
       const bar = Math.floor(pos / 16);
       if (BT.story && BT.oxBars.length && bar >= BT.oxBars[0]) { BT.oxBars.shift(); this.ox(); }
       if (!BT.story && !G.demo) {
-        const lv = 1 + Math.floor((bar + 2) / 11); if (lv !== BT.level) { BT.level = lv; Flow.level = lv; GHud.level(lv); Snd.sfx('levelup'); BT.travel = Math.max(1.2, 1.9 - (lv - 1) * .12); }
+        const lv = 1 + Math.floor((bar + 2) / 11); if (lv !== BT.level) { BT.level = lv; Flow.level = lv; GHud.level(lv); Snd.sfx('levelup'); BT.travel = Math.max(1.2, 1.9 - (lv - 1) * .12); if (lv > 1) FX.text(W / 2, 300, `레벨 ${lv}! 서류가 더 빨라져요`, '#fff', 60, 1.3); }
         if (bar % 11 === 9 && BT.lastOx !== bar && bar > 2) { BT.lastOx = bar; this.ox(); }
         if (BT.trust <= 0) this.over();
       }
@@ -3304,7 +3304,7 @@ Scenes.drone = {
   exit() { DR.done = true; },
   start() { DR.t = 0; if (!DR.drones.length) this.spawn(); },
   goalHud() { GHud.goal(DR.gold ? '덧창 배송' : '비축물자 배송', Math.min(1, DR.delivered / DR.need), DR.gold ? '마지막!' : `${DR.delivered}/${DR.need}`); },
-  freePad() { const used = new Set(DR.drones.filter(d => d.state === 'wait').map(d => d.pad)); const f = [0, 1, 2].filter(i => !used.has(i)); return f.length ? pick(f) : -1; },
+  freePad() { const used = new Set(DR.drones.filter(d => d.state === 'wait' || d.state === 'back' || (d.state === 'fly' && Math.hypot(d.x - d.sx, d.y - d.sy) < 120)).map(d => d.pad)); const f = [0, 1, 2].filter(i => !used.has(i)); return f.length ? pick(f) : -1; },
   patience() { return DR.story ? 11 / D().k : Math.max(5, 10.5 - DR.level * .6); },
   speed() { return DR.story ? 420 : Math.min(640, 400 + DR.level * 30); },
   spawn(o = {}) {
@@ -3313,7 +3313,7 @@ Scenes.drone = {
     const kind = o.kind || (Math.random() < binP ? 'bin' : pick(DR_ORDER));
     const [x, y] = DR_PADS[pad];
     const life = o.life || this.patience();
-    const d = { pad, kind, x, y, sx: x, sy: y, state: 'wait', path: [], seg: 0, life, max: life, stun: 0, ang: 0, t: 0, fade: 0, gold: !!o.gold, rise: 0 };
+    const d = { pad, kind, x, y, sx: x, sy: y, state: 'wait', path: [], seg: 0, life, max: life, stun: 0, immune: 0, ang: 0, t: 0, fade: 0, gold: !!o.gold, rise: 0 };
     DR.drones.push(d);
     Snd.sfx('launch');
     return d;
@@ -3437,6 +3437,7 @@ Scenes.drone = {
         if (DR.fever <= 0 && !DR.tut && fl === 'play' && DR.drag?.d !== d) { d.life -= dt; if (d.life <= 0) this.late(d); }
         continue;
       }
+      if (d.immune > 0) d.immune -= dt;
       if (d.stun > 0) { d.stun -= dt; d.ang += dt * 14; continue; }
       // 길 따라 날기
       let mv = (d.gold ? 380 : this.speed()) * dt;
@@ -3451,11 +3452,11 @@ Scenes.drone = {
       }
     }
     // 부딪힘
-    const fly = DR.drones.filter(d => d.state === 'fly' && d.stun <= 0);
+    const fly = DR.drones.filter(d => d.state === 'fly' && d.stun <= 0 && d.immune <= 0);
     for (let i = 0; i < fly.length; i++) for (let j = i + 1; j < fly.length; j++) {
       const a = fly[i], b = fly[j];
       if (Math.hypot(a.x - b.x, a.y - b.y) < 62) {
-        a.stun = b.stun = 1; DR.bumps++; DR.streak = 0;
+        a.stun = b.stun = 1; a.immune = b.immune = 2.4; DR.bumps++; DR.streak = 0;
         Snd.sfx('thud'); shake(6); FX.burst((a.x + b.x) / 2, (a.y + b.y) / 2, ['#fff', '#ffd23f'], 14, 300, 6, .4); FX.text((a.x + b.x) / 2, (a.y + b.y) / 2 - 70, '쿵!', '#fff', 46, .8);
         // 살짝 밀어내기
         const dx = a.x - b.x || 1, dy = a.y - b.y, L = Math.hypot(dx, dy); a.x += dx / L * 20; a.y += dy / L * 20; b.x -= dx / L * 20; b.y -= dy / L * 20;
