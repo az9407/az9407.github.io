@@ -2428,7 +2428,7 @@ const OX = {
     if (ok) this.ok++;
     $$('#oxPop .ox').forEach(b => { b.disabled = true; b.classList.toggle('pick', b.dataset.a === a); });
     const r = $('#oxRes'); r.hidden = false;
-    r.innerHTML = ok ? `<b class="good">정답! ${esc($('#oxReward').textContent.replace('맞히면 ', ''))}</b>` : `<b class="bad">${a ? '아쉬워요!' : '시간이 다 됐어요!'} 정답은 ${this.q.a === 'O' ? 'O, 맞는 말이에요' : 'X, 틀린 말이에요'}</b><span>${esc(this.q.exp)}</span>`;
+    r.innerHTML = ok ? `<b class="good">정답! ${esc($('#oxReward').textContent.replace('맞히면 ', ''))}</b>` : `<b class="bad">${a ? '아쉬워요!' : '시간이 다 됐어요!'} 정답은 ${this.q.a}</b><span>${esc(this.q.exp)}</span>`;
     Snd.sfx(ok ? 'power' : 'bad'); if (ok) FX.stars(W / 2, 520, 14);
     later(ok ? (G.demo ? 750 : 900) : (G.demo ? 1200 : 2600), () => this.close(ok));
   },
@@ -5028,7 +5028,7 @@ const Quiz = {
     $$('#qzBtns .ox').forEach(b => { b.disabled = true; b.classList.toggle('pick', b.dataset.a === a); });
     Snd.sfx(ok ? 'good' : 'bad');
     const v = $('#qzVerdict'); v.style.color = ok ? 'var(--gd)' : '#ff3d64';
-    v.textContent = ok ? '정답이에요!' : `아쉬워요. 정답은 ${q.a === 'O' ? 'O, 맞는 말이에요' : 'X, 틀린 말이에요'}`;
+    v.textContent = ok ? '정답이에요!' : `아쉬워요. 정답은 ${q.a}`;
     $('#qzExp').textContent = q.exp;
     $('#qzRes').hidden = false;
     $('#qzNext').innerHTML = (this.i + 1 < this.list.length ? '다음 문제' : '결과 보기') + icon('i-arrow');
