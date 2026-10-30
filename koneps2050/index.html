@@ -126,7 +126,7 @@ button svg{pointer-events:none}
 .ar-head{position:absolute;left:80px;top:56px;right:80px}
 .ar-head p{margin-top:8px}
 .ar-cards{position:absolute;left:60px;right:60px;top:240px;display:grid;grid-template-columns:repeat(5,1fr);gap:24px}
-.ar-card h3{font-size:30px!important}
+.ar-card h3{font-size:29px!important;white-space:nowrap;letter-spacing:-1px;overflow:hidden;text-overflow:clip}
 .ar-card p{font-size:20px!important}
 .ar-card .ac-art{height:220px!important}
 .ar-card{background:#fff;border-radius:40px;box-shadow:0 12px 0 rgba(31,43,77,.12),0 24px 40px rgba(31,43,77,.18);overflow:hidden;display:flex;flex-direction:column;text-align:left;transition:transform .1s}
@@ -522,39 +522,40 @@ input.wrong{border-color:#ff3d64!important;animation:shakeX .4s}
   #print img{width:100%}
 }
 
-/* 큰 글씨: 핵심 글자는 보통의 1.6~2배, 자잘한 설명은 숨김 */
-#stage.big .dbox{width:1720px}
-#stage.big .dtext{font-size:68px;line-height:1.32}
-#stage.big .dbox.sys .dtext{font-size:62px}
-#stage.big .tutor-box:not(.side-r):not(.side-l){width:1680px}
-#stage.big .tt-main p{font-size:64px;line-height:1.25}
-#stage.big .tutor-box.side-r .tt-main p,#stage.big .tutor-box.side-l .tt-main p{font-size:46px}
+/* 큰 글씨: 핵심 글자는 보통의 1.3~1.5배, 자잘한 설명은 숨김 */
+#stage.big .dbox{width:1600px}
+#stage.big .dtext{font-size:54px;line-height:1.38}
+#stage.big .dbox.sys .dtext{font-size:50px}
+#stage.big .tutor-box:not(.side-r):not(.side-l){width:1500px}
+#stage.big .tt-main p{font-size:52px;line-height:1.3}
+#stage.big .tutor-box.side-r .tt-main p,#stage.big .tutor-box.side-l .tt-main p{font-size:40px}
 #stage.big .tt-main p small{display:none}
-#stage.big #buddy{max-width:1300px}
-#stage.big #buddy p{font-size:52px}
-#stage.big .ox-card{width:1500px}
-#stage.big .ox-q{font-size:72px;line-height:1.3}
-#stage.big .ox-tag{font-size:46px}
-#stage.big .ox-reward{font-size:40px}
-#stage.big .ox{height:150px;font-size:58px}
-#stage.big .ox svg{width:72px;height:72px}
-#stage.big .ox-res{font-size:44px}
-#stage.big .ox-res b{font-size:56px}
-#stage.big .gh-score b{font-size:86px}
-#stage.big .gh-name{font-size:40px}
-#stage.big .gh-lv{font-size:34px}
-#stage.big .gh-lv b{font-size:46px}
-#stage.big .gh-goal span,#stage.big .gh-goal b{font-size:38px}
-#stage.big .btn.huge{font-size:68px}
+#stage.big #buddy{max-width:1100px}
+#stage.big #buddy p{font-size:42px}
+#stage.big .ox-card{width:1300px}
+#stage.big .ox-q{font-size:58px;line-height:1.35}
+#stage.big .ox-tag{font-size:40px}
+#stage.big .ox-reward{font-size:34px}
+#stage.big .ox{height:130px;font-size:46px}
+#stage.big .ox svg{width:64px;height:64px}
+#stage.big .ox-res{font-size:36px}
+#stage.big .ox-res b{font-size:44px}
+#stage.big .gh-score b{font-size:76px}
+#stage.big .gh-name{font-size:34px}
+#stage.big .gh-lv{font-size:30px}
+#stage.big .gh-lv b{font-size:40px}
+#stage.big .gh-goal span,#stage.big .gh-goal b{font-size:32px}
+#stage.big .btn.huge{font-size:58px}
 #stage.big .btn.huge small,#stage.big .t-foot,#stage.big .t-kicker{display:none}
-#stage.big .rbtn span{font-size:26px}
-#stage.big .ar-card p,#stage.big .ar-card .ac-best span,#stage.big .ar-card .ac-new{display:none}
-#stage.big .ar-card h3{font-size:40px!important;line-height:1.2;word-break:keep-all}
-#stage.big .ar-head p{display:none}
-#stage.big .ar-card .ac-play{height:100px;font-size:42px}
-#stage.big .mnode .mn-name{font-size:40px}
+#stage.big .rbtn span{font-size:25px}
+#stage.big .ar-card p,#stage.big .ar-card .ac-new,#stage.big .ar-head p{display:none}
+#stage.big .ar-card .ac-best{font-size:22px}
+#stage.big .ar-card .ac-best b{font-size:28px}
+#stage.big .ar-card h3{font-size:32px!important;letter-spacing:-1.5px}
+#stage.big .ar-card .ac-play{height:92px;font-size:38px}
+#stage.big .mnode .mn-name{font-size:34px}
 #stage.big .mnode .mn-name small,#stage.big .map-journey{display:none}
-#stage.big .rs-rows li{font-size:40px;padding:14px 28px}
+#stage.big .rs-rows li{font-size:34px;padding:14px 28px}
 #stage.big .rs-fact{display:none}
 
 </style>
@@ -1046,7 +1047,7 @@ const FX = {
     for (let i = 0; i < n; i++) this.ps.push({ x: rand(0, W), y: rand(-200, -20), vx: rand(-80, 80), vy: rand(150, 420), life: rand(2.2, 3.6), max: 3.6, color: pick(cols), size: rand(8, 14), g: 60, rect: true, rot: rand(0, 6), vr: rand(-8, 8) });
   },
   ring(x, y, color, r0 = 10, r1 = 140, life = .5, w = 8) { this.rings.push({ x, y, color, r0, r1, life, max: life, w }); },
-  text(x, y, str, color = '#fff', size = 40, life = 1) { this.texts.push({ x, y, str, color, size: size * (settings.bigText ? 1.5 : 1), life, max: life }); },
+  text(x, y, str, color = '#fff', size = 40, life = 1) { this.texts.push({ x, y, str, color, size: size * (settings.bigText ? 1.25 : 1), life, max: life }); },
   update(dt) {
     for (const p of this.ps) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= .985; if (p.rot != null) p.rot += p.vr * dt; }
     this.ps = this.ps.filter(p => p.life > 0);
@@ -2257,7 +2258,7 @@ function panel(ctx, x, y, w, h) {
   rr(ctx, x, y, w, h, 30); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill(); ctx.restore();
 }
 function label(ctx, txt, x, y, size, fg, bg) {
-  if (settings.bigText) size *= 1.7;
+  if (settings.bigText) size *= 1.35;
   ctx.save(); ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round'; ctx.lineWidth = size * .3; ctx.strokeStyle = bg; ctx.strokeText(txt, x, y); ctx.fillStyle = fg; ctx.fillText(txt, x, y); ctx.restore();
 }
